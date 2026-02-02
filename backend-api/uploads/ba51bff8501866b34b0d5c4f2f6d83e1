@@ -1,0 +1,788 @@
+openapi: 3.0.3
+info:
+  title: Nexus Enterprise Banking API
+  description: |
+    A comprehensive API for a digital banking platform. 
+    Features include account management, fund transfers, card issuance, loan processing, and KYC compliance.
+    
+    This API simulates complex enterprise relationships including:
+    - Hierarchical dependencies (User -> Accounts -> Transactions)
+    - Sequential workflows (KYC -> Account Opening -> Card Issuance)
+    - Security requirements (OAuth2, Bearer Tokens)
+  version: 1.4.2
+  contact:
+    name: Nexus API Team
+    email: api-support@nexus-bank.com
+    url: https://developer.nexus-bank.com
+  termsOfService: https://nexus-bank.com/terms
+
+servers:
+  - url: https://api.nexus-bank.com/v1
+    description: Production Server
+  - url: https://staging-api.nexus-bank.com/v1
+    description: Staging Environment
+  - url: http://localhost:3001/api/v1
+    description: Local Development
+
+tags:
+  - name: Authentication
+    description: Security and session management
+  - name: User Management
+    description: KYC and profile operations
+  - name: Accounts
+    description: Checking, Savings, and Multi-currency accounts
+  - name: Transactions
+    description: Payments, transfers, and history
+  - name: Cards
+    description: Debit and Credit card management
+  - name: Loans
+    description: Loan applications and servicing
+
+paths:
+  # ==========================================
+  # AUTHENTICATION
+  # ==========================================
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate User
+      description: Exchange credentials for access tokens.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh Token
+      operationId: refreshToken
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  format: jwt
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  # ==========================================
+  # USER & KYC
+  # ==========================================
+  /users:
+    post:
+      tags:
+        - User Management
+      summary: Register New User
+      description: Initiates the onboarding process. Returns a user ID required for KYC.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '201':
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{userId}:
+    get:
+      tags:
+        - User Management
+      summary: Get User Profile
+      operationId: getUserProfile
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users/{userId}/kyc:
+    post:
+      tags:
+        - User Management
+      summary: Submit KYC Documents
+      description: Upload identity documents for a user. Required before opening accounts.
+      operationId: submitKyc
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                documentType:
+                  type: string
+                  enum: [PASSPORT, DRIVERS_LICENSE, NATIONAL_ID]
+                frontImage:
+                  type: string
+                  format: binary
+                backImage:
+                  type: string
+                  format: binary
+                idNumber:
+                  type: string
+      responses:
+        '202':
+          description: KYC Processing Started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  kycStatus:
+                    type: string
+                    enum: [PENDING, VERIFIED, REJECTED]
+                    example: PENDING
+                  referenceId:
+                    type: string
+                    format: uuid
+
+  # ==========================================
+  # ACCOUNTS
+  # ==========================================
+  /accounts:
+    get:
+      tags:
+        - Accounts
+      summary: List User Accounts
+      description: Retrieve all accounts linked to the authenticated user or specific userId.
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+    
+    post:
+      tags:
+        - Accounts
+      summary: Open New Account
+      description: Creates a new checking or savings account. Requires Verified KYC.
+      operationId: createAccount
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+
+  /accounts/{accountId}:
+    get:
+      tags:
+        - Accounts
+      summary: Get Account Details
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+
+  /accounts/{accountId}/balance:
+    get:
+      tags:
+        - Accounts
+      summary: Get Real-time Balance
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Balance info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+
+  # ==========================================
+  # TRANSACTIONS
+  # ==========================================
+  /transactions/transfer:
+    post:
+      tags:
+        - Transactions
+      summary: Internal Transfer
+      description: Transfer funds between accounts within the bank.
+      operationId: initiateTransfer
+      security:
+        - bearerAuth: []
+            # - scope: write:transactions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionReceipt'
+
+  /transactions/payment:
+    post:
+      tags:
+        - Transactions
+      summary: External Payment
+      description: Pay a beneficiary or external merchant.
+      operationId: makePayment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '202':
+          description: Payment processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionReceipt'
+
+  /transactions/history:
+    get:
+      tags:
+        - Transactions
+      summary: Transaction History
+      parameters:
+        - name: accountId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  # ==========================================
+  # CARDS
+  # ==========================================
+  /cards/issue:
+    post:
+      tags:
+        - Cards
+      summary: Issue New Card
+      description: Issue a physical or virtual card linked to an account.
+      operationId: issueCard
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardIssueRequest'
+      responses:
+        '201':
+          description: Card issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Card'
+
+  /cards/{cardId}/activate:
+    post:
+      tags:
+        - Cards
+      summary: Activate Card
+      operationId: activateCard
+      parameters:
+        - $ref: '#/components/parameters/CardId'
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cvv:
+                  type: string
+                  pattern: '^\d{3,4}$'
+      responses:
+        '200':
+          description: Card active
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ACTIVE
+
+  # ==========================================
+  # LOANS
+  # ==========================================
+  /loans/products:
+    get:
+      tags:
+        - Loans
+      summary: Get Loan Products
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanProduct'
+
+  /loans/apply:
+    post:
+      tags:
+        - Loans
+      summary: Apply for Loan
+      operationId: applyLoan
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplication'
+      responses:
+        '201':
+          description: Application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanApplicationResult'
+
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    oAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.nexus-bank.com/oauth/authorize
+          tokenUrl: https://auth.nexus-bank.com/oauth/token
+          scopes:
+            read:accounts: Access account info
+            write:transactions: Execute transfers
+
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: "123e4567-e89b-12d3-a456-426614174000"
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: "acc_892302302"
+    CardId:
+      name: cardId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: "crd_550029192"
+
+  responses:
+    Unauthorized:
+      description: Access token is missing or invalid
+    NotFound:
+      description: The specified resource was not found
+
+  schemas:
+    # --- Auth ---
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "j.doe"
+        password:
+          type: string
+          format: password
+          example: "SecretPass123!"
+        deviceId:
+          type: string
+          description: Unique device identifier for audits
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          example: Bearer
+        user:
+          $ref: '#/components/schemas/User'
+
+    # --- User ---
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        password:
+          type: string
+        phoneNumber:
+          type: string
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        kycStatus:
+          type: string
+          enum: [NONE, PENDING, VERIFIED, REJECTED]
+        createdAt:
+          type: string
+          format: date-time
+
+    # --- Account ---
+    CreateAccountRequest:
+      type: object
+      required:
+        - userId
+        - accountType
+        - currency
+      properties:
+        userId:
+          type: string
+          format: uuid
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS, BUSINESS]
+        currency:
+          type: string
+          enum: [USD, EUR, GBP, JPY]
+          default: USD
+        initialDeposit:
+          type: number
+          minimum: 0
+
+    Account:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        accountNumber:
+          type: string
+        userId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [CHECKING, SAVINGS, BUSINESS]
+        status:
+          type: string
+          enum: [ACTIVE, FROZEN, CLOSED, PENDING]
+        currency:
+          type: string
+        balance:
+          type: number
+        iban:
+          type: string
+
+    Balance:
+      type: object
+      properties:
+        accountId:
+          type: string
+        available:
+          type: number
+        ledger:
+          type: number
+        currency:
+          type: string
+        lastUpdated:
+          type: string
+          format: date-time
+
+    # --- Transaction ---
+    TransferRequest:
+      type: object
+      required:
+        - fromAccountId
+        - toAccountId
+        - amount
+        - currency
+      properties:
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          minimum: 0.01
+        currency:
+          type: string
+        memo:
+          type: string
+
+    PaymentRequest:
+      type: object
+      required:
+        - fromAccountId
+        - beneficiaryId
+        - amount
+      properties:
+        fromAccountId:
+          type: string
+        beneficiaryId:
+          type: string
+          description: External beneficiary ID
+        amount:
+          type: number
+        reference:
+          type: string
+
+    Transaction:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        type:
+          type: string
+          enum: [DEPOSIT, WITHDRAWAL, TRANSFER_IN, TRANSFER_OUT, PAYMENT, FEE]
+        amount:
+          type: number
+        currency:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REVERSED]
+        counterparty:
+          type: string
+        date:
+          type: string
+          format: date-time
+
+    TransactionReceipt:
+      type: object
+      properties:
+        transactionId:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    # --- Cards ---
+    CardIssueRequest:
+      type: object
+      required:
+        - accountId
+        - cardType
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        cardType:
+          type: string
+          enum: [VIRTUAL, PHYSICAL]
+        designId:
+          type: string
+        shippingAddressId:
+          type: string
+
+    Card:
+      type: object
+      properties:
+        cardId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+        maskedNumber:
+          type: string
+          example: "**** **** **** 1234"
+        expiryDate:
+          type: string
+          example: "12/28"
+        status:
+          type: string
+          enum: [ISSUED, ACTIVE, BLOCKED, LOST]
+        type:
+          type: string
+          enum: [DEBIT, CREDIT]
+
+    # --- Loans ---
+    LoanProduct:
+      type: object
+      properties:
+        productId:
+          type: string
+        name:
+          type: string
+        interestRate:
+          type: number
+        minTermMonths:
+          type: integer
+        maxTermMonths:
+          type: integer
+
+    LoanApplication:
+      type: object
+      required:
+        - userId
+        - loanProductId
+        - principalAmount
+        - durationMonths
+      properties:
+        userId:
+          type: string
+          format: uuid
+        loanProductId:
+          type: string
+        principalAmount:
+          type: number
+        durationMonths:
+          type: integer
+        incomeDetails:
+          type: object
+          properties:
+            monthlyIncome:
+              type: number
+            employer:
+              type: string
+
+    LoanApplicationResult:
+      type: object
+      properties:
+        applicationId:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED, UNDER_REVIEW]
+        approvedAmount:
+          type: number
+        message:
+          type: string

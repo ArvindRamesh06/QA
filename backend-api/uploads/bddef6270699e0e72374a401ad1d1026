@@ -1,0 +1,262 @@
+openapi: 3.0.3
+info:
+  title: Sample Commerce API
+  version: 1.0.0
+  description: Sample OpenAPI specification with independent and dependent APIs
+
+servers:
+  - url: https://api.example.com/v1
+
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - role
+      properties:
+        id:
+          type: string
+          example: u_123
+        email:
+          type: string
+          example: user@example.com
+        role:
+          type: string
+          enum:
+            - USER
+            - ADMIN
+
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - currency
+      properties:
+        id:
+          type: string
+          example: p_101
+        name:
+          type: string
+          example: Laptop
+        price:
+          type: number
+          example: 75000
+        currency:
+          type: string
+          enum:
+            - INR
+            - USD
+
+    Order:
+      type: object
+      required:
+        - id
+        - userId
+        - productId
+        - quantity
+        - status
+      properties:
+        id:
+          type: string
+          example: o_789
+        userId:
+          type: string
+        productId:
+          type: string
+        quantity:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum:
+            - CREATED
+            - PAID
+            - CANCELLED
+
+paths:
+
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: API is running
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+
+  /products:
+    get:
+      summary: Get product list
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Products fetched
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /products/{productId}:
+    get:
+      summary: Get product by ID
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /orders:
+    post:
+      summary: Create an order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - productId
+                - quantity
+              properties:
+                userId:
+                  type: string
+                productId:
+                  type: string
+                quantity:
+                  type: integer
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}:
+    get:
+      summary: Get order details
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}/pay:
+    post:
+      summary: Pay for an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order paid
+
+  /users/{userId}/orders:
+    get:
+      summary: Get orders for a user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: User orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}/cancel:
+    post:
+      summary: Cancel an order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order cancelled

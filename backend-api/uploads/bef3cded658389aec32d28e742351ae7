@@ -1,0 +1,3550 @@
+openapi: 3.0.3
+info:
+  title: PSD2 API
+  version: "1.11"
+  description: "\n\nWelcome to the documentation for the Payment Services Directive 2 (PSD2) API. This comprehensive guide is designed to assist developers, financial institutions, and businesses in understanding and implementing the API specifications mandated by PSD2. The PSD2 directive, introduced by the European Union, aims to enhance the security and efficiency of electronic payments while fostering competition and innovation in the financial services sector.\n\n## Overview\n\nThe PSD2 API documentation provides detailed information on the APIs that enable secure and standardized access to payment account information and payment initiation services. By adhering to these specifications, financial institutions can facilitate seamless transactions, improve user experience, and comply with regulatory requirements.\n\n## Key Features\n\n- **Account Information Services (AIS):** Explore the APIs that allow authorized third-party providers to access account information, empowering users with a consolidated view of their financial data across multiple accounts and institutions.\n\n- **Payment Initiation Services (PIS):** Understand the APIs that enable third-party providers to initiate payments on behalf of users, streamlining the payment process and fostering innovation in the payments landscape.\n\n- **Strong Customer Authentication (SCA):** Learn about the security measures in place, including two-factor authentication, to ensure the protection of user data and compliance with PSD2 security requirements.\n\n\n## Getting Started\n\n  Whether you are a developer integrating PSD2 APIs into your applications or a financial institution ensuring compliance, this documentation provides step-by-step guides, code samples, and detailed API reference information to facilitate a smooth integration process.\n\n## API Reference\n\n  The API reference section outlines the endpoints, request and response formats, authentication mechanisms, and error handling details for both AIS and PIS APIs. Developers can use this information to build robust and secure applications that leverage the capabilities of the PSD2 API.\n\n## Compliance and Security\n\n  Understand the regulatory landscape surrounding PSD2 and how to ensure compliance with the directive's requirements. Learn about security best practices to protect sensitive financial data and maintain the trust of users.\n\n## Support and Feedback\n\n  For any questions, issues, or feedback related to the PSD2 API documentation, our support team is here to assist you. We encourage developers and stakeholders to actively participate in the improvement of this documentation by providing insights and suggestions.\n\nThank you for choosing PSD2 API, and we look forward to empowering you with the tools and knowledge needed to navigate the evolving landscape of financial services.\n\n\n## How to request API access with QSeal certificate\n  Accessing the PSD2 API with a QSeal certificate is a secure and straightforward process. Here's a step-by-step guide for developers:\n\n### **Step 1:** Express Interest\n  Initiate the access request by sending an email to our dedicated support team at psd2@partnersbanka.cz, expressing your interest in using the PSD2 API. Provide information about your organization and the intended use of the API.\n\n### **Step 2:** QSeal Certificate Submission\n  Attach the public part of your organization's QSeal certificate to the email. This certificate is essential for secure communication between your systems and the PSD2 API. Ensure the certificate adheres to the specified security standards outlined in the API documentation.\n\n### **Step 3:** Access Verification\n  Our support team will promptly review your request and verify the provided QSeal certificate. This process ensures the legitimacy of your access request and compliance with regulatory standards.\n\n### **Step 4:** OAuth2 Authorization Credentials\n  Upon successful verification, you will receive a notification confirming the approval of your access request. This communication will include the necessary OAuth2 authorization credentials - ```client_id``` and ```client_secret``` - enabling secure access to the PSD2 API. See **Authorization** section.\n\n### **Step 5:** Integration and Support\n  With access granted, proceed with integrating the PSD2 API into your applications using the provided OAuth2 credentials and the endpoint details. Our support team is available to assist you with any questions or challenges encountered during the integration process.\n\n  By following this streamlined access request procedure, you can quickly and securely access the PSD2 API using your organization's QSeal certificate. This efficient process allows you to focus on integrating the API seamlessly into your applications, obtaining the OAuth2 credentials necessary for a secure and compliant authorization process within the regulatory framework of PSD2.\n\n## Introduction to Digest Signature Authorization for API Security\n  Securing API communication is paramount in the digital landscape, and one effective method is through the use of a digest signature. This introduction provides insights into API authorization using a digest signature composed of selected HTTP headers.\n\n### Why Digest Signature?\n  APIs handle sensitive data and transactions, demanding robust security measures. Digest signatures offer a cryptographic approach to authenticate and ensure the integrity of API requests. By incorporating selected HTTP headers into the signature, this method provides a secure means of authorization.\n\n### How Digest Signature Works\n  Digest signatures involve the creation of a unique hash value based on selected elements of the HTTP request. These elements typically include headers such as ```Date```, and ```Content-Type```. The hash, commonly created using cryptographic algorithms like SHA-256, serves as a unique fingerprint for the request.\n\n### Benefits of Digest Signature Authorization\n  1. **Enhanced Security:** Digest signatures add an extra layer of security by ensuring that the request's content and headers remain unchanged during transmission.\n  2. **Protection Against Replay Attacks:** The timestamp in the digest signature prevents replay attacks, as the server can validate the freshness of the request.\n  3. **Selective Authorization:**  By choosing specific headers for inclusion in the digest, API providers can control which parts of the request contribute to the signature, offering flexibility in authorization.\n  4. **Cryptographic Integrity:** The cryptographic nature of the digest signature ensures that even a minor alteration to the request results in a vastly different signature, providing a robust mechanism for detecting tampering.\n\n### Implementing Digest Signature Authorization\n  To implement digest signature authorization, developers must follow a predefined algorithm to construct the signature based on selected headers. The server, in turn, verifies the signature using the same algorithm, ensuring the request's authenticity.\n\n### Getting Started\nThis documentation provides a comprehensive guide on implementing API authorization through digest signatures. Explore the step-by-step process, sample code snippets, and best practices to seamlessly integrate digest signature authorization into your API communication.\n\nEmbrace the power of digest signatures to fortify your API against unauthorized access and tampering. Elevate the security posture of your applications by adopting this robust method of API authorization, ensuring the confidentiality and integrity of your data in transit.\n\n## Authorization by signature in the request header\n  * TPP (Third Party Provider) uses its QSeal certificate to call the signed request header\n  * In each call, TPP sends a signed digest of selected header parameters in the header according to the defined algorithm\n  * The API verifies the hash and signature of selected request headers\n  * The TPP Admin checks the JERRS and CA register\n\n### Headers for signature algorithm\n  The algorithm is described in detail for each API endpoint. It expects to add these parameters to the request header:\n\n  | Parameter | Description | Example |\n  |---|---|---|\n  | Digest | Digest according to RFC3230 containing the algorithm. The digest is created as a hash of a string composed of the values of the headers specified in the sign structure. | sha-256=449d8432503f072092ad6e2c71e4b44... |\n  | Signature | A structure describing the content of the signature, its algorithm and BASE64 value of the signature in the form of a structured string. <br/>Format:<br/>algorithm=\\\"{0}\\\",headers=\\\"{1}\\\",signature=\\\"{2}\\\" |  c29a002951a81688c00000.... |\n  | TPP-Signature-Certificate | Base64 public part of the certificate (without envelope) | MIIDzDCCArSgAwIBAgIJAPwpq5bhcUyaMA0GCSq...  |\n\n> **Warning**\n>\n> *Please be aware that any attempt to use hashing algorithms other than **SHA-256** to generate header signatures will result in errors and the failure of the signature validation process. It is recommended to adhere to the SHA-256 standard to ensure compatibility and security.*\n>\n> **For proper functionality**, it is important to insert the parameter values in the hash string consecutively without a separator, i.e. valueofX-Request-IDvalueofDate  \n\n### Example of headers and procedure for a specific request\n  ```http\n  X-Correlation-Id: c3a95adb-05d5-4b56-a8ac-54d7a2f97645\n  X-Request-ID: 36e65182-7a28-11ed-a1eb-0242ac120002\n  User-Involved: true\n  Authorization: Bearer 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08\n  Date: Wed, 22 Oct 2023 07:28:00 GMT\n  Digest: SHA256=8adb0cce2022c23bacefa0843260ca54835a16eb64376f98b8f0cb98686802d1\n  Signature: algorithm=\"SHA256withRSA\",headers=\"date x-request-id\",signature=\"UqIFDmRRG/j2/pqxMYLHw9XY47rdlz3Wto03C9GraneaZNfHvdKYlwgGw/Bl3uQbZTLTfC+FIhosiLCS0njeL/KuDgLyJTMf1dI/nwoZAduWEiFxlp61rV4OLWWrJO9TSRoE7y+PKDX+9CClGMD0VqD0pQgxipOrEJv9a/Xv0J2sJuHlaiwLrAuH9PtAMhi91vWlXyz2ws7Z4F4ZNIYzrluYNLQ6Tml7lZj7I2jLjj/1MBBZCnZlksg4RUMHDmwkVy4NaP6fUl4+me3YGUd0pGqfyDwO0JCPBOFjL67i/el64DzhdtfjVqNsDfkt8sDe9tM/JC+mRRIGYQ95xw/fAg==\"\n  TPP-Signature-Certificate: MIIDzDCCArSgAwIBAgIJAPwpq5bhcUyaMA0GCSqGSIb3DQEBCwUAMHsxCzAJBgNVBAYTAkNaMQ8wDQYDVQQIDAZQcmFndWUxDzANBgNVBAcMBlByYWd1ZTEVMBMGA1UECgwMVGVzdCwgcy5yLm8uMREwDwYDVQQDDAhKb2huIERvZTEgMB4GCSqGSIb3DQEJARYRam9obi5kb2VAdGVzdC5jb20wHhcNMjMwMjA1MTc0ODE5WhcNMjQwMjA1MTc0ODE5WjB7MQswCQYDVQQGEwJDWjEPMA0GA1UECAwGUHJhZ3VlMQ8wDQYDVQQHDAZQcmFndWUxFTATBgNVBAoMDFRlc3QsIHMuci5vLjERMA8GA1UEAwwISm9obiBEb2UxIDAeBgkqhkiG9w0BCQEWEWpvaG4uZG9lQHRlc3QuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4eRDKWXAV9XF5FLgegwzpekWukH+MRtqeIjHyAn5dy4SIqEbKcwDhSBE9xciUZkAyeOBY3Y4m6y2Y5/d5+gNWDQQ0dYlCsZ090IQIZdMNqaGji+8e0Pzsyzl7FHPE9OlldzFXOk3a0rq0A0bcRJLn7brFXOPqmLS3RaSvQC4pL2hna+ripcxNzZr9jk8lCtQ4rKOOho5azmaXDh/nO7dPMiR1R6cZdCLjmOdVaCBZdSpOufo2xU0Ux2Noyaky65auh1nu7aloQrPCNLzSGJY5xq8W0LEiln0ir7eCkVizHB9UixBzcsTuUKR5uXLyYUA3sQ8TSYIwM6EDu/rz0Z3EwIDAQABo1MwUTAdBgNVHQ4EFgQUWomTS6xJEgkKX1+zu2AA0XxJ1pQwHwYDVR0jBBgwFoAUWomTS6xJEgkKX1+zu2AA0XxJ1pQwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEACYDuhO+5I53Mf5EpyPWkt3Vuapujkt1VNgNb60QGQCAdk/ZOdGFRZrbytmAzA7JfroCosSsxTcS18toFefxdPJrPxDOmt+ZrI/o8K++2/3mRWM2bEu2dZJj1+yGe27VqP5qsRVx+DY/iZIySZ+RVp5Mv9Nmb53U+7VDUmGtKiT4LXqwEfxHKkIBNiDs4zoCnIT1rAynLI6KTGsHX21xDMn2nUSF2jIDXSdzi8yiwRzRJ9rdEScpL9pKN444Ud/qOE+H+ryFCHSi/MgHPT+C7A1j2x54KQQ5X6ku9GOS8j2QB4VAC7KTzkRQaZIW3ax5x8ST3vvATTMgzVU6G9Sv//Q==\n  ```"
+  contact:
+    name: Support
+    url: https://partnersbanka.cz
+    email: psd2@partnersbanka.cz
+servers:
+  - url: 'https://api.pbapi.cz/bank-psd2outboundapi-sandbox'
+    description: |
+      The sandbox for mock financial services is a dedicated environment meticulously crafted for the development, testing, and experimentation of financial applications. Its primary purpose is to provide developers and financial institutions with a controlled space to simulate financial scenarios without affecting the live production environment. In this context, it serves as a testing ground for PSD2 API implementations.
+
+      There is no OAuth2 authentication for the sandbox environment.
+
+      Also there is no certificate license validation on the sandbox -- you can use any private certificate with same structure as QSeal.
+  - url: 'https://api.pbapi.cz/bank-psd2outboundapi'
+    description: |
+      The production PSD2 API server is the live, operational hub for financial institutions complying with the Payment Services Directive 2 (PSD2). Its primary purpose is to securely manage and facilitate access to payment account information and payment initiation services. The production server ensures real-time interactions, high availability, and adherence to PSD2 security standards, enabling seamless and regulated financial transactions for users.
+paths:
+  /my/accounts:
+    get:
+      tags:
+        - AISP
+      summary: List of client payment accounts
+      description: |
+        Paged list of client accounts. Each account contains a unique id usable for URI referencing, e.g. for the account detail.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: getUsersAccounts
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/size"
+        - $ref: "#/components/parameters/page"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: GET List of users accounts response
+                type: object
+                required:
+                  - pageNumber
+                  - pageCount
+                  - pageSize
+                  - totalCount
+                  - accounts
+                properties:
+                  pageNumber:
+                    $ref: "#/components/schemas/pageNumber"
+                  pageCount:
+                    $ref: "#/components/schemas/pageCount"
+                  pageSize:
+                    $ref: "#/components/schemas/pageSize"
+                  nextPage:
+                    $ref: "#/components/schemas/nextPage"
+                  totalCount:
+                    $ref: "#/components/schemas/totalCount"
+                  accounts:
+                    description: Collection of users accounts
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/usersAccount"
+        '400':
+          description: >
+            PARAMETER_INVALID
+
+
+            The value of the parameter is not valid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            PAGE_NOT_FOUND
+
+
+            Request for a non-existing page
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - AISP
+  /my/accounts/{accountId}/balance:
+    get:
+      tags:
+        - AISP
+      summary: Account Balance
+      description: |
+        The balance of the specific client account according to the reference id account.
+
+        **Headers for the digest intended for signature (in this order):**
+          * GET /my/accounts/{accountId}/balance{?currency} (Marked as 'uri' in the 'headers' object in the 'Signature' header)
+          * X-Request-ID
+          * Date
+      operationId: getUserAccountBalance
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/accountCurrency"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: GET User account balance response
+                type: object
+                required:
+                  - balances
+                properties:
+                  balances:
+                    $ref: "#/components/schemas/userAccountBalance"
+        '400':
+          description: >
+            PARAMETER_INVALID
+
+
+            The value of the parameter is not valid AC09 (InvalidAccountCurrency)
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            PAGE_NOT_FOUND
+
+
+            Request for a non-existing page
+
+
+            or
+
+
+            ID_NOT_FOUND
+
+
+            Invalid or unknown account ID
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - AISP
+  /my/accounts/{accountId}/transactions:
+    get:
+      tags:
+        - AISP
+      summary: Overview of transactions
+      description: |
+        Paged list of transactions of a selected client account
+
+        **Headers for the digest intended for signature (in this order):**
+          * GET /my/accounts/{id}/transactions{?fromDate,toDate,currency,size,page,order} (Marked as 'uri' in the 'headers' object in the 'Signature' header)
+          * X-Request-ID
+          * Date
+      operationId: getUserTransactions
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/accountCurrency"
+        - $ref: "#/components/parameters/fromDate"
+        - $ref: "#/components/parameters/toDate"
+        - $ref: "#/components/parameters/size"
+        - $ref: "#/components/parameters/page"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: GET User Account transactions history
+                type: object
+                required:
+                  - pageNumber
+                  - pageCount
+                  - pageSize
+                  - totalCount
+                  - transactions
+                properties:
+                  pageNumber:
+                    $ref: "#/components/schemas/pageNumber"
+                  pageCount:
+                    $ref: "#/components/schemas/pageCount"
+                  pageSize:
+                    $ref: "#/components/schemas/pageSize"
+                  nextPage:
+                    $ref: "#/components/schemas/nextPage"
+                  totalCount:
+                    $ref: "#/components/schemas/totalCount"
+                  transactions:
+                    description: Collection of users account transactions
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/usersAccountTransaction"
+        '400':
+          description: >
+            PARAMETER_INVALID
+
+
+            The value of the parameter is not valid
+
+
+            AC09 (InvalidAccountCurrency): currency not supported according to the table of exchanges
+
+
+            DT01 (InvalidDate): Invalid format, Date in future, Date too old, ...
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            PAGE_NOT_FOUND
+
+
+            Request for a non-existing page
+
+
+            or
+
+
+            ID_NOT_FOUND
+
+
+            Invalid or unknown account ID
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - AISP
+  /my/payments/balanceCheck:
+    post:
+      tags:
+        - PISP
+      summary: Query for Balance Check
+      description: |
+        This is a resource for sending a query for Balance Check in a specific payment account of the account payer. The resource is not authorized directly by the account holder, through the authorization resource. Access to information must be granted by the client outside the interaction of this API before the resource is used.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: pispBalanceCheck
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        $ref: '#/components/requestBodies/balanceCheckRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/balanceCheckResponse200'
+        '400':
+          $ref: '#/components/responses/balanceCheckResponse400'
+        '401':
+          $ref: '#/components/responses/balanceCheckResponse401'
+        '403':
+          $ref: '#/components/responses/balanceCheckResponse403'
+        '500':
+          $ref: '#/components/responses/balanceCheckResponse500'
+      security:
+        - OAuth2:
+            - PISP
+  /my/payments:
+    post:
+      tags:
+        - PISP
+      summary: New Payment initiation
+      description: |
+        Resource for entering a new payment.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: createNewPayment
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - debtorAccount
+                - creditorAccount
+              properties:
+                paymentIdentification:
+                  $ref: "#/components/schemas/paymentIdentification"
+                paymentTypeInformation:
+                  $ref: "#/components/schemas/paymentTypeInformation"
+                amount:
+                  description: Payment amount
+                  type: object
+                  required:
+                    - instructedAmount
+                  properties:
+                    instructedAmount:
+                      $ref: "#/components/schemas/amount"
+                requestedExecutionDate:
+                  $ref: "#/components/schemas/requestedExecutionDate"
+                debtorAccount:
+                  $ref: "#/components/schemas/debtorAccount"
+                creditorAccount:
+                  $ref: "#/components/schemas/creditorAccount"
+                remittanceInformation:
+                  allOf:
+                    - $ref: "#/components/schemas/remittanceInformation"
+                  properties:
+                    additionalRemittanceInformation:
+                      description: Additional free text information for payer of up to 140 characters.
+                      type: string
+                      example: 'Platba za MŠ …'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: Response of newly created payment
+                type: object
+                required:
+                  - paymentIdentification
+                  - paymentTypeInformation
+                  - signInfo
+                  - instructionStatus
+                properties:
+                  paymentIdentification:
+                    $ref: "#/components/schemas/paymentIdentificationInResponse"
+                  paymentTypeInformation:
+                    $ref: "#/components/schemas/paymentTypeInformationInResponse"
+                  signInfo:
+                    $ref: "#/components/schemas/signInfo"
+                  instructionStatus:
+                    $ref: "#/components/schemas/instructionStatusInitial"
+                  statusChangeInfo:
+                    $ref: "#/components/schemas/statusChangeInfo"
+        '400':
+          description: >
+            FIELD_MISSING
+
+
+            Missing mandatory field in the request.
+
+
+            FIELD_INVALID
+
+
+            FIELD value is not valid.
+
+
+            AC02
+
+
+            [InvalidDebtorAccountNumber] – invalid account identifier in the request content.
+
+
+            AC03
+
+
+            [InvalidCreditorAccountNumber] -  recipient account number is closed, blocked, credit card are disabled for the account type, or the recipient's account number is in invalid format (note: only valid for in-house payments).
+
+
+            AC10
+
+
+            [InvalidDebtorAccountCurrency] –  the specified payer account currency does not correspond to the client's account currency for the account number held in the bank (the account currency is optional, in the case of multicurrency accounts, the account currency must be specified - Raiffeisenbank).
+
+
+            AC12
+
+
+            [InvalidAccountType] - account type does not match allowed account types (e.g., a non-paying account).
+
+
+            AM05
+
+
+            [Duplication] -  this is a duplicate. Universal code for a duplicate CISP query (validated by, for example, CSOB) or a duplicate payment via GIS (non-unique payment reference).
+
+
+            AM11
+
+
+            [InvalidTransactionCurrency] – the request contains a currency not trade/not supported.
+
+
+            AM12
+
+
+            [InvalidAmount] – wrong amount. For instance, too low or high amount or wrong number format according to the number of decimal places according to the ISO 4217.
+
+
+            FF01
+
+
+            [Invalid File Format] – invalid JSON format or other technical problem with the query processing.
+
+
+            BE19
+
+
+            [InvalidChargeBearerCode] - invalid fee type for the given transaction type.
+
+
+            DT01
+
+
+            [InvalidDate] - non-existent date value or format. Maturity in the future or in the past. Transactions on a non-business day of a bank (unless the bank receives such orders).
+
+
+            RC07
+
+
+            [InvalidCreditorBICIdentifier] –  invalid recipient SWIFT / BIC code.
+
+
+            RC10
+
+
+            [InvalidCreditorClearingSystemMemberIdentifier] -  invalid recipient bank code identification.
+
+
+            RR03
+
+
+            [MissingCreditorNameOrAddress] -  the field is missing the required data about the recipient's name or address (or its part). If the data is in bad format, the error code FIELD_INVALID is used.
+
+
+            RR10
+
+
+            [InvalidCharacterSet] – invalid character set in the request.
+
+
+            NO_PART
+
+
+            Unattainable Payment Method - The payer or payee bank does not provide the requested priority of the instruction (Instant Payment). In this case, the bank can extend the error response by the "parameters" element and define a set of possible payment priorities. TPP resp. the PSU may be able to choose another type of priority.
+
+
+            …
+
+
+            "parameters": {
+
+
+
+
+
+              "ALLOWED_PRIORITY_TYPES" : ["NORM", "INST"]
+            }
+
+
+            …
+
+
+            REC_SEND
+
+
+            [RECEIVER_SAME_AS_SENDER] –  Payer's account is the same as the payee's account (Applies to all types of payments)
+
+
+            NARR
+
+
+            Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+
+            or
+
+
+            AG01
+
+
+            [TransactionForbidden] – absent consent to access to balance check at the account.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            NARR
+
+
+            Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/payments/{paymentId}/sign/{signId}:
+    put:
+      tags:
+        - PISP
+      summary: Payment authorization status
+      description: |
+        A resource indicating whether the authorization process was completed and with what result.
+
+        If you do not know the paymentId, or is not yet available, use signId for both signId and paymentId.
+
+        **Headers for the digest intended for signature (in this order):**
+          * PUT /my/payments/{paymentId}/sign/{signId} (Marked as 'uri' in the 'headers' object in the 'Signature' header)
+          * X-Request-ID
+          * Date
+      operationId: getPaymentAuthorizationStatus
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/paymentId"
+        - $ref: "#/components/parameters/signId"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: Status of initiated payment authorization response
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    allOf:
+                      - $ref: "#/components/schemas/authorizationState"
+                  instructionStatus:
+                    allOf:
+                      - $ref: "#/components/schemas/instructionStatus"
+                    example: 'ACTC'
+                  pollInterval:
+                    description: Value in milliseconds how often I can ask for authorization status.
+                    allOf:
+                      - $ref: "#/components/schemas/pollInterval"
+        '400':
+          description: >
+            AUTH_LIMIT_EXCEEDED
+
+
+            The resource may not be authorized with this method
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+
+            The requested payment ID does not exist.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '501':
+          description: >
+            NOT_IMPLEMENTED
+
+
+            Method not implemented
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/payments/{paymentId}/status-page-url/{signId}:
+    post:
+      tags:
+        - PISP
+      summary: Payment authorization status page URL
+      description: |
+        A resource that allows the TPP to obtain the URL of the Partners frontend "Authorization status page" to which the user should be redirected after he confirmed payment authorization.
+
+        The provided redirect URL (`redirectToTPPUrl`) will be used by the Partners frontend to redirect the user once the authorization reaches a final state.
+      operationId: getPaymentStatusPageUrl
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/paymentId"
+        - $ref: "#/components/parameters/signId"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - redirectToTPPUrl
+              properties:
+                redirectToTPPUrl:
+                  type: string
+                  format: uri
+                  description: URI to which the PSU should be redirected from the status page once authorization completes
+                  example: https://tpp.client.com/auth/success
+      responses:
+        '200':
+          description: OK – The URL for the status page was successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - statusPageUrl
+                properties:
+                  statusPageUrl:
+                    type: string
+                    format: uri
+                    description: The URL of the frontend authorization status page
+                    example: https://psd2.bank.cz/authorization-status/payment/3f7db2f6-9a3b-45c2-b9cf-0baf1fe3b212
+        '400':
+          description: >
+            BAD REQUEST
+
+            Request validation failed or required input is missing
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+            Invalid/missing access token or certificate
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+            Caller is not allowed to invoke this operation
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+            The paymentId or signId does not exist or is invalid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            INTERNAL SERVER ERROR
+
+            Unexpected error occurred
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/standingorders:
+    get:
+      tags:
+        - AISP
+      summary: List of client standing orders
+      description: |
+        Paged list of client standing orders. Each standing order contains a unique id usable for URI referencing, e.g. for the standing order detail.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: getUserStandingOrders
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/size"
+        - $ref: "#/components/parameters/page"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: GET List of users standing orders response
+                type: object
+                required:
+                  - pageNumber
+                  - pageCount
+                  - pageSize
+                  - totalCount
+                  - standingOrders
+                properties:
+                  pageNumber:
+                    $ref: "#/components/schemas/pageNumber"
+                  pageCount:
+                    $ref: "#/components/schemas/pageCount"
+                  pageSize:
+                    $ref: "#/components/schemas/pageSize"
+                  nextPage:
+                    $ref: "#/components/schemas/nextPage"
+                  totalCount:
+                    $ref: "#/components/schemas/totalCount"
+                  standingOrders:
+                    description: Collection of users standing orders
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/standingOrderDetails"
+        '400':
+          description: >
+            PARAMETER_INVALID
+
+
+            The value of the parameter is not valid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            PAGE_NOT_FOUND
+
+
+            Request for a non-existing page
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - AISP
+    post:
+      tags:
+        - PISP
+      summary: New standing order initiation
+      description: |
+        Resource for entering a new standingorder.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: createNewStandingOrder
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - requestedExecutionDate
+                - standingOrder
+                - debtorAccount
+                - creditorAccount
+              properties:
+                standingOrderIdentification:
+                  description: Standing order identification
+                  allOf:
+                    - $ref: "#/components/schemas/paymentIdentification"
+                paymentTypeInformation:
+                  $ref: "#/components/schemas/paymentTypeInformation"
+                amount:
+                  description: Payment amount
+                  type: object
+                  required:
+                    - instructedAmount
+                  properties:
+                    instructedAmount:
+                      $ref: "#/components/schemas/amount"
+                requestedExecutionDate:
+                  $ref: "#/components/schemas/requestedExecutionDate"
+                standingOrder:
+                  $ref: "#/components/schemas/standingOrder"
+                debtorAccount:
+                  $ref: "#/components/schemas/debtorAccount"
+                creditorAccount:
+                  $ref: "#/components/schemas/creditorAccount"
+                remittanceInformation:
+                  allOf:
+                    - $ref: "#/components/schemas/remittanceInformation"
+                  properties:
+                    additionalRemittanceInformation:
+                      description: Additional free text information for payer of up to 140 characters.
+                      type: string
+                      example: 'Platba za MŠ …'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: Response of newly created standing order
+                type: object
+                required:
+                  - standingOrderIdentification
+                  - paymentTypeInformation
+                  - signInfo
+                  - instructionStatus
+                properties:
+                  standingOrderIdentification:
+                    description: Identifier of estabilished standing order instruction
+                    allOf:
+                      - $ref: "#/components/schemas/paymentIdentificationInResponse"
+                  paymentTypeInformation:
+                    $ref: "#/components/schemas/paymentTypeInformationInResponse"
+                  signInfo:
+                    $ref: "#/components/schemas/signInfo"
+                  instructionStatus:
+                    $ref: "#/components/schemas/instructionStatusInitial"
+                  statusChangeInfo:
+                    $ref: "#/components/schemas/statusChangeInfo"
+        '400':
+          description: >
+            FIELD_MISSING
+
+
+            Missing mandatory field in the request.
+
+
+            FIELD_INVALID
+
+
+            FIELD value is not valid.
+
+
+            AC02
+
+
+            [InvalidDebtorAccountNumber] – invalid account identifier in the request content.
+
+
+            AC03
+
+
+            [InvalidCreditorAccountNumber] -  recipient account number is closed, blocked, credit card are disabled for the account type, or the recipient's account number is in invalid format (note: only valid for in-house payments).
+
+
+            AC10
+
+
+            [InvalidDebtorAccountCurrency] –  the specified payer account currency does not correspond to the client's account currency for the account number held in the bank (the account currency is optional, in the case of multicurrency accounts, the account currency must be specified - Raiffeisenbank).
+
+
+            AC12
+
+
+            [InvalidAccountType] - account type does not match allowed account types (e.g., a non-paying account).
+
+
+            AM05
+
+
+            [Duplication] -  this is a duplicate. Universal code for a duplicate CISP query (validated by, for example, CSOB) or a duplicate payment via GIS (non-unique payment reference).
+
+
+            AM11
+
+
+            [InvalidTransactionCurrency] – the request contains a currency not trade/not supported.
+
+
+            AM12
+
+
+            [InvalidAmount] – wrong amount. For instance, too low or high amount or wrong number format according to the number of decimal places according to the ISO 4217.
+
+
+            FF01
+
+
+            [Invalid File Format] – invalid JSON format or other technical problem with the query processing.
+
+
+            BE19
+
+
+            [InvalidChargeBearerCode] - invalid fee type for the given transaction type.
+
+
+            DT01
+
+
+            [InvalidDate] - non-existent date value or format. Maturity in the future or in the past. Transactions on a non-business day of a bank (unless the bank receives such orders).
+
+
+            RC07
+
+
+            [InvalidCreditorBICIdentifier] –  invalid recipient SWIFT / BIC code.
+
+
+            RC10
+
+
+            [InvalidCreditorClearingSystemMemberIdentifier] -  invalid recipient bank code identification.
+
+
+            RR03
+
+
+            [MissingCreditorNameOrAddress] -  the field is missing the required data about the recipient's name or address (or its part). If the data is in bad format, the error code FIELD_INVALID is used.
+
+
+            RR10
+
+
+            [InvalidCharacterSet] – invalid character set in the request.
+
+
+            REC_SEND
+
+
+            [RECEIVER_SAME_AS_SENDER] –  Payer's account is the same as the payee's account (Applies to all types of payments)
+
+
+            NARR
+
+
+            Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+
+            or
+
+
+            AG01
+
+
+            [TransactionForbidden] – absent consent to access to balance check at the account.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            NARR
+
+
+            Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/standingorders/{standingOrderId}/sign/{signId}:
+    put:
+      tags:
+        - PISP
+      summary: Standing order authorization status
+      description: |
+        A resource indicating whether the authorization process was completed and with what result.
+
+        If you do not know the standingOrderId, or is not yet available, use signId for both signId and standingOrderId.
+
+        **Headers for the digest intended for signature (in this order):**
+          * PUT /my/standingorders/{standingOrderId}/sign/{signId} (Marked as 'uri' in the 'headers' object in the 'Signature' header)
+          * X-Request-ID
+          * Date
+      operationId: getStandingOrderAuthorizationStatus
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/standingOrderId"
+        - $ref: "#/components/parameters/signId"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                description: Status of an authorization of a newly created standing order response
+                type: object
+                required:
+                  - state
+                properties:
+                  state:
+                    allOf:
+                      - $ref: "#/components/schemas/authorizationState"
+                  instructionStatus:
+                    allOf:
+                      - $ref: "#/components/schemas/instructionStatusOfStandingOrder"
+                    example: 'ACTC'
+                  pollInterval:
+                    description: Value in milliseconds how often I can ask for authorization status.
+                    allOf:
+                      - $ref: "#/components/schemas/pollInterval"
+        '400':
+          description: >
+            AUTH_LIMIT_EXCEEDED
+
+
+            The resource may not be authorized with this method
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+
+            Invalid/missing access token = user is not authenticated
+
+
+            or
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+
+            Invalid/missing certificate = provider is not authenticated
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+
+            The requested transaction ID does not exist.
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '501':
+          description: >
+            NOT_IMPLEMENTED
+
+
+            Method not implemented
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/standingorders/{transactionIdentification}:
+    delete:
+      tags:
+        - PISP
+      summary: Remove standing order
+      description: |
+        Resource for removing a standing order.
+      operationId: deleteStandingOrder
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/transactionIdentification"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: Successfully removed standing order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/deleteStandingOrderResponse"
+        '400':
+          description: >
+            BAD REQUEST
+
+            Request validation failed or required input is missing
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+            Invalid/missing access token or certificate
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+            Caller is not allowed to invoke this operation
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+            The standingOrderId or signId does not exist or is invalid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            INTERNAL SERVER ERROR
+
+            Unexpected error occurred
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+    put:
+      tags:
+        - PISP
+      summary: Update standing order
+      description: |
+        Resource for updating a standing order.
+      operationId: updateStandingOrder
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/transactionIdentification"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/updateStandingOrderRequest"
+      responses:
+        '200':
+          description: Successfully updated standing order detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/updateStandingOrderResponse"
+        '400':
+          description: >
+            BAD REQUEST
+
+            Request validation failed or required input is missing
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+            Invalid/missing access token or certificate
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+            Caller is not allowed to invoke this operation
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+            The standingOrderId or signId does not exist or is invalid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            INTERNAL SERVER ERROR
+
+            Unexpected error occurred
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+    get:
+      tags:
+        - AISP
+      summary: Standing order detail
+      description: |
+        Resource for obtaining the detail of a standing order
+      operationId: getStandingOrderDetail
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: "#/components/parameters/transactionIdentification"
+        - $ref: '#/components/parameters/Authorization'
+      responses:
+        '200':
+          description: Successfully retrieved standing order detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/standingOrderDetails'
+        '400':
+          description: >
+            BAD REQUEST
+
+            Request validation failed or required input is missing
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+            Invalid/missing access token or certificate
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+            Caller is not allowed to invoke this operation
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+            The standingOrderId or signId does not exist or is invalid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            INTERNAL SERVER ERROR
+
+            Unexpected error occurred
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - AISP
+  /my/standingorders/{standingOrderId}/status-page-url/{signId}:
+    post:
+      tags:
+        - PISP
+      summary: Generate status page URL for standing order authorization
+      description: |
+        A resource that allows the TPP to obtain the URL of the Partners frontend "Authorization status page" to which the user should be redirected after he confirmed standing order authorization.
+
+        The provided redirect URL (`redirectToTPPUrl`) will be used by the Partners frontend to redirect the user once the authorization reaches a final state.
+      operationId: getStatusPageUrlForStandingOrder
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - name: standingOrderId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier of the standing order
+        - $ref: "#/components/parameters/signId"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - redirectToTPPUrl
+              properties:
+                redirectToTPPUrl:
+                  type: string
+                  format: uri
+                  description: URI to which the PSU should be redirected from the status page once authorization completes
+                  example: https://tpp.client.com/auth/success
+      responses:
+        '200':
+          description: OK – The URL for the status page was successfully generated
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - statusPageUrl
+                properties:
+                  statusPageUrl:
+                    type: string
+                    format: uri
+                    description: The URL of the frontend authorization status page
+                    example: https://psd2.bank.cz/authorization-status/standing-order/8d77f2ce-2104-4f49-bc2f-ff3f91f2ddc3
+        '400':
+          description: >
+            BAD REQUEST
+
+            Request validation failed or required input is missing
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '401':
+          description: >
+            UNAUTHORISED
+
+            Invalid/missing access token or certificate
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '403':
+          description: >
+            FORBIDDEN
+
+            Caller is not allowed to invoke this operation
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '404':
+          description: >
+            ID_NOT_FOUND
+
+            The standingOrderId or signId does not exist or is invalid
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+        '500':
+          description: >
+            INTERNAL SERVER ERROR
+
+            Unexpected error occurred
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/errorsResponse'
+      security:
+        - OAuth2:
+            - PISP
+  /my/accounts/balanceCheck:
+    post:
+      tags:
+        - CISP
+      summary: Query for Balance Check
+      description: |
+        This is a resource for sending a query for Balance Check in a specific payment account of the account payer. The resource is not authorized directly by the account holder, through the authorization resource. Access to information must be granted by the client outside the interaction of this API before the resource is used.
+
+        **Headers for the digest intended for signature (in this order):**
+          * X-Request-ID
+          * Date
+      operationId: cispBalanceCheck
+      x-correlation-id-random: true
+      parameters:
+        - $ref: "#/components/parameters/XRequestID"
+        - $ref: "#/components/parameters/Date"
+        - $ref: "#/components/parameters/Digest"
+        - $ref: "#/components/parameters/Signature"
+        - $ref: "#/components/parameters/TPPSignatureCertificate"
+        - $ref: "#/components/parameters/UserInvolved"
+        - $ref: "#/components/parameters/TPPName"
+        - $ref: '#/components/parameters/Authorization'
+      requestBody:
+        $ref: '#/components/requestBodies/balanceCheckRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/balanceCheckResponse200'
+        '400':
+          $ref: '#/components/responses/balanceCheckResponse400'
+        '401':
+          $ref: '#/components/responses/balanceCheckResponse401'
+        '403':
+          $ref: '#/components/responses/balanceCheckResponse403'
+        '500':
+          $ref: '#/components/responses/balanceCheckResponse500'
+      security:
+        - OAuth2:
+            - CISP
+components:
+  requestBodies:
+    balanceCheckRequestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - exchangeIdentification
+              - debtorAccount
+              - transactionDetails
+            properties:
+              exchangeIdentification:
+                $ref: "#/components/schemas/exchangeIdentification"
+              card:
+                $ref: "#/components/schemas/card"
+              debtorAccount:
+                $ref: "#/components/schemas/debtorAccount"
+              merchant:
+                $ref: "#/components/schemas/merchant"
+              transactionDetails:
+                $ref: "#/components/schemas/transactionDetails"
+  responses:
+    balanceCheckResponse200:
+      description: OK
+      content:
+        application/json:
+          schema:
+            description: Check user account balance response
+            type: object
+            required:
+              - responseIdentification
+              - exchangeIdentification
+              - response
+            properties:
+              responseIdentification:
+                type: integer
+                description: Unique identification of response to query for Balance Check (from ASPSP). At this moment implemented as a unix timestamp.
+                example: 98765
+              exchangeIdentification:
+                type: string
+                description: Repeated identification of a payment transaction (query for Balance Check) from the issuer of the card to which the request for Balance Check linked to the account.
+                example: '658576010faf0a23dc'
+              response:
+                type: string
+                description: >
+                  Result code of query for Balance Check.
+
+
+                  APPR
+
+
+                  Enough funds on this account
+
+
+                  DECL
+
+
+                  Unsufficient funds on this account
+
+                enum: ['APPR', 'DECL']
+                example: 'APPR'
+    'balanceCheckResponse400':
+      description: >
+        FIELD_MISSING
+
+
+        Missing mandatory field in the request.
+
+
+        or
+
+
+        FIELD_INVALID
+
+
+        FIELD value is not valid.
+
+
+        or
+
+
+        AC02
+
+
+        [InvalidDebtorAccountNumber] – invalid account identifier in the request content.
+
+
+        or
+
+
+        AC09
+
+
+        [InvalidAccountCurrency] – invalid currency of the required account.
+
+
+        or
+
+
+        AC12
+
+
+        [InvalidAccountType] -  account type does not match allowed account types (e.g., a non-paying account).
+
+
+        or
+
+
+        AG01
+
+
+        [TransactionForbidden] – absent consent to access to balance check at the account.
+
+
+        or
+
+
+        AM11
+
+
+        [InvalidTransactionCurrency] – the request contains a currency not trade/not supported.
+
+
+        or
+
+
+        AM12
+
+
+        [InvalidAmount] – wrong amount. For instance, too low or high amount or wrong number format according to the number of decimal places according to the ISO 4217.
+
+
+        or
+
+
+        FF01
+
+
+        [Invalid File Format] – invalid JSON forma tor other technical problem with the query processing.
+
+
+        or
+
+
+        RF01
+
+
+        [NotUniqueTransactionReference] – not unique request identifier.
+
+
+        or
+
+
+        RR10
+
+
+        [InvalidCharacterSet] – invalid character set in the request.
+
+
+        or
+
+
+        NARR
+
+
+        Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorsResponse'
+    'balanceCheckResponse401':
+      description: >
+        UNAUTHORISED
+
+
+        Invalid/missing access token = user is not authenticated
+
+
+        or
+
+
+        Invalid/missing certificate = provider is not authenticated
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorsResponse'
+    'balanceCheckResponse403':
+      description: >
+        FORBIDDEN
+
+
+        Authentication with an invalid certificate or expired access token, a call that does not match a third-party license.
+
+
+        or
+
+
+        AG01
+
+
+        [TransactionForbidden] – absent consent to access to balance check at the account.
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorsResponse'
+    'balanceCheckResponse500':
+      description: >
+        NARR
+
+
+        Narrative – a general reason for rejecting the payment, with an addition of error-related information.
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/errorsResponse'
+  securitySchemes:
+    OAuth2:
+      description: |
+        # **OAuth 2.0 Code Grant Flow: A Comprehensive Guide**
+          OAuth 2.0 is a widely adopted framework for securing APIs and web applications. The Code Grant Flow is one of the most secure and commonly used OAuth 2.0 flows for obtaining access tokens. This section provides a comprehensive guide on the OAuth 2.0 Code Grant Flow within the context of API security.
+
+        ## Overview
+          The Code Grant Flow is designed to facilitate secure access to protected resources without exposing user credentials to unauthorized parties. It involves a series of steps between the client application, the authorization server, and the resource server. The primary actors in this flow are the client application, the authorization server, and the resource owner.
+
+        ## **Steps in the OAuth 2.0 Code Grant Flow**
+
+          1. Authorization Request: The client initiates the flow by redirecting the resource owner's user-agent (typically a web browser) to the authorization server's authorization endpoint. The request includes parameters such as client ID, redirect URI, and the desired scope of access.
+          2. User Consent: The resource owner authenticates and provides consent to the client application. The authorization server validates the user's credentials and ensures the requested scopes are approved.
+          3. Authorization Code Generation: Upon successful authentication and consent, the authorization server issues an authorization code and redirects the user-agent back to the client's specified redirect URI.
+          4. Token Request: The client, now possessing the authorization code, makes a secure, back-channel request to the authorization server's token endpoint. The request includes the authorization code, client credentials, and the redirect URI.
+          5. Access Token Retrieval: The authorization server validates the authorization code, client credentials, and redirect URI. Upon successful validation, it issues an access token to the client.
+          6. Access Token Usage: The client can now use the obtained access token to make authorized requests to the resource server on behalf of the resource owner. The resource server validates the access token and responds with the requested resource if the token is valid.
+          7. Refresh Token Issuance: It's essential to note that for the issuance of a refresh token, the client must include the offline_access scope in the initial authorization request. If approved, the authorization server issues a refresh token along with the access token.
+
+        ## **Security Considerations**
+
+          1. **HTTPS Usage:** All communications involved in the Code Grant Flow, including the initial authorization request and subsequent token exchange, should occur over HTTPS to ensure data confidentiality and integrity.
+          2. **Client Authentication:** Clients must authenticate themselves when exchanging the authorization code for an access token, adding an extra layer of security.
+          3. Token Storage and Handling: Properly secure the access token, store it securely, and implement mechanisms for token refreshing to maintain secure, long-lived sessions.
+          4. Refresh Tokens: The inclusion of the offline_access scope is mandatory for the authorization server to issue a refresh token. This allows the client to obtain a new access token without requiring user interaction.
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login-pid.pbapi.cz/realms/pid/protocol/openid-connect/auth
+          tokenUrl: https://login-pid.pbapi.cz/realms/pid/protocol/openid-connect/token
+          scopes:
+            AISP: Account information service
+            PISP: Payment initialization service
+            offline_access: For refresh_token issuance
+  parameters:
+    XRequestID:
+      in: header
+      name: X-Request-ID
+      description: Unique request ID
+      schema:
+        type: string
+        format: uuid
+      required: true
+      example: '5fe495d4-eeb6-467c-ad4b-03b16b240e0a'
+    UserInvolved:
+      in: header
+      name: User-Involved
+      description: Involved user indication
+      schema:
+        type: boolean
+      required: true
+      example: false
+    TPPName:
+      in: header
+      name: TPP-Name
+      description: Name of TPP
+      schema:
+        type: string
+      required: false
+      example: 'First PFM'
+    Authorization:
+      in: header
+      name: Authorization
+      description: A header for passing the authorization token
+      schema:
+        type: string
+      required: true
+      example: 'Bearer 5yvisSWTg42OghjxK/hOcqTqRpU6-uVjiWd8/hKUXRhRAwa7m-4m0-ec3AUE/tdIQ1rAA-L3LkKCc=8s4tC2JGpBPqvP/npQ48sgg6mF?t/JxF/Pi93ANR/Nxc1VYFQ=i7-RVxujau-NpB64o!zmvZ6tJ0v=J=VL!rUJrW-I2jGineDRW-y2Wz9X/T4SlHqKsz7?OZq01hf2Gf186vVafpV=/-dn1/Mze!=qFxFBiC9IhtS-Xaa9AkN9sE!Y?H!I'
+    Date:
+      in: header
+      name: Date
+      description: Date & time of the request, specified in a format by TPP. It is used to confirm the request.
+      schema:
+        type: string
+      required: true
+      example: 'Wed, 6 Jan 2019 07:20:01 GMT'
+    Digest:
+      in: header
+      name: Digest
+      description: >
+        Digest according to RFC3230 that contains an algorithm. The digest is created as a hash of a string composed of header values specified in the Signature structure.
+
+
+        How to generate the hash?
+
+
+        1. Create a string of header values based on the "headers" specified in the "Signature" header. The header values must be in given order without separator
+
+
+
+
+
+            - example:
+                - Signature header: algorithm="SHA256withRSA",headers="uri authorization date x-request-id",signature="ZmFzZGZhc2RmYXNkZmtmYWpzZGZhNnM1ZGY5YThzZDRmNmY0YTZzZDg0ZjZhc2Q4ZjZhc2Q4NGZhNnNkODRmYXNkZg=="
+                - String to be hashed: "GET /my/accounts/08230397-3824-4e9e-918a-1f519eb31d9f/balanceBearer 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08Wed, 22 Oct 2023 07:28:00 GMT36e65182-7a28-11ed-a1eb-0242ac120002"
+
+
+        2. Make a hash based on the "algorithm" specified in the "Signature" header.
+
+      schema:
+        type: string
+      required: true
+      example: 'sha-256=7dd520f3d524f7c3c04b0b98e961007032f0d0df30cfa858a4d68c4a4e4507e4'
+    Signature:
+      in: header
+      name: Signature
+      description: >
+        A structure describing, in the form of a structured string, the content of the signature, its algorithm, and the BASE64 value of the signature.
+
+
+        Possible headers to be signed (depends on the endpoint):
+
+
+        - uri
+
+
+        - authorization
+
+
+        - date
+
+
+        - x-request-id
+
+      schema:
+        type: string
+      required: true
+      example: 'algorithm="SHA256withRSA",headers="uri authorization date x-request-id",signature="ZmFzZGZhc2RmYXNkZmtmYWpzZGZhNnM1ZGY5YThzZDRmNmY0YTZzZDg0ZjZhc2Q4ZjZhc2Q4NGZhNnNkODRmYXNkZg=="'
+    TPPSignatureCertificate:
+      in: header
+      name: TPP-Signature-Certificate
+      description: Base64 of the certificate public part (without envelope)
+      schema:
+        type: string
+      required: true
+      example: 'NTU1MDk4YmNhNWNjOGUwN2Y4ZTI0ZmZiMWY5ZDQwZGM2MTFlNDBmMDgzNzBkNDU4MTc3MjcwNWViYTA4NjE3MTVjZDFmZGM5MzgwNjIwNjhiMzIyZjNlMDMwYzY1MjMxYTMyNjhiYTQwMmEzZmFmZDZkNzdhYjIyMWUwYjYwMmE='
+    fromDate:
+      in: query
+      name: fromDate
+      description: Filtering by time. Return records starting from a specific date in ISO 8601 Date format.
+      schema:
+        type: string
+        format: date-time
+      required: false
+      example: '2016-08-01T00:00:00+01:00'
+    toDate:
+      in: query
+      name: toDate
+      description: Filtering by time. Return records ending with a specific date in ISO 8601 Date format.
+      schema:
+        type: string
+        format: date-time
+      required: false
+      example: '2016-09-01T00:00:00+01:00'
+    size:
+      in: query
+      name: size
+      description: Paging. Number of entries per page. Default is 25. Maximum is 100. Returns error if size is over 100.
+      schema:
+        type: integer
+      required: false
+      example: 100
+    page:
+      in: query
+      name: page
+      description: >
+        Paging. Required page. + Default: 0
+
+      schema:
+        type: integer
+      required: false
+      example: 1
+    accountId:
+      in: path
+      name: accountId
+      description: ID of the User Account
+      schema:
+        type: string
+      required: true
+      example: 'D2C8C1DCC51A3738538A40A4863CA288E0225E52'
+    paymentId:
+      in: path
+      name: paymentId
+      description: ID of the Payment
+      schema:
+        type: string
+      required: true
+      example: '6581651381985'
+    signId:
+      in: path
+      name: signId
+      description: ID of the initiated authorization
+      schema:
+        type: string
+      required: true
+      example: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+    transactionIdentification:
+      in: path
+      name: transactionIdentification
+      description: Unique identifier of the Transaction
+      schema:
+        type: string
+      required: true
+      example: 'NejakeID41785962314574'
+    standingOrderId:
+      in: path
+      name: standingOrderId
+      description: ID of the Transaction
+      schema:
+        type: string
+      required: true
+      example: '033225570000078020091'
+    accountCurrency:
+      in: query
+      name: currency
+      description: Required account currency in ISO 4217 format for multi-currency accounts.
+      schema:
+        type: string
+      required: false
+      example: 'CZK'
+  schemas:
+    pageNumber:
+      type: integer
+      description: Number of current page
+      example: 0
+    pageCount:
+      type: integer
+      description: Total number of query pages
+      example: 1
+    pageSize:
+      type: integer
+      description: Number of entries per page. This parameter can match the required size value from the query, except for the cases when it is the last page, or when the requested page range exceeded the maximum limit defined for the particular API resource.
+      example: 100
+    nextPage:
+      type: integer
+      description: The number of the next page. If the current page is at the same time the last page of the list, then this parameter is not listed or is given with a null value.
+      example: 1
+    totalCount:
+      type: integer
+      description: Total number of entries for all pages.
+      example: 120
+    usersAccount:
+      description: Users account information
+      type: object
+      properties:
+        id:
+          type: string
+          description: API Payment account identifier
+          example: 'f0aa18c9f900015'
+        identification:
+          $ref: "#/components/schemas/accountIdentification"
+        currency:
+          description: Payer account currency. As defined in ISO4217
+          type: string
+          maxLength: 3
+          example: 'CZK'
+        servicer:
+          $ref: "#/components/schemas/accountServicer"
+        nameI18N:
+          description: Localised account name
+          type: string
+          example: 'Můj hlavní účet'
+        productI18N:
+          description: Product Code
+          type: string
+          example: 'OP_CURRENT_ACCOUNT_BASIC'
+        ownersNames:
+          description: Array of name/s of the account disponent/s for consumers or trade name/s for commercial clients
+          type: array
+          example: ['Jan Novák', 'Monika Nováková']
+          items:
+            type: string
+    accountIdentification:
+      description: Payer account identifier
+      type: object
+      properties:
+        iban:
+          description: Account IBAN identification
+          type: string
+          example: 'CZ6508000000192000145399'
+        other:
+          description: Another payer account identifier, e.g. the account number
+          type: string
+          maxLength: 35
+          example: '19-2000145399'
+    accountServicer:
+      description: Identification of the account servicer / operator.
+      type: object
+      properties:
+        bankCode:
+          description: Bank code
+          type: string
+          example: '0800'
+        countryCode:
+          description: Bank country code in ISO 3166-2 format
+          type: string
+          example: 'CZ'
+        bic:
+          description: Bank BIC code
+          type: string
+          maxLength: 354
+          example: 'GIBACZPX'
+    userAccountBalance:
+      description: Balance of user's account
+      type: object
+      required:
+        - type
+        - amount
+        - creditDebitIndicator
+        - date
+      properties:
+        type:
+          $ref: "#/components/schemas/userAccountBalanceType"
+        amount:
+          allOf:
+            - $ref: "#/components/schemas/amount"
+          properties:
+            value:
+              example: 156576
+        creditDebitIndicator:
+          $ref: "#/components/schemas/userAccountBalanceCreditDebitIndicator"
+        date:
+          $ref: "#/components/schemas/ISO8601Date"
+    userAccountBalanceType:
+      description: Type of balance of user's account
+      type: object
+      required:
+        - codeOrProprietary
+      properties:
+        codeOrProprietary:
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              description: >
+                Code of balance type
+
+
+                CLAV (ClosingAvailable): Available balance
+
+              type: string
+              enum: ['CLAV']
+              example: 'CLAV'
+    userAccountBalanceCreditDebitIndicator:
+      description: >
+        ```DBIT``` if the balance is less than 0 and ```CRDT``` if the balance is greater than or equal to 0.
+
+      type: string
+      enum: ['DBIT', 'CRDT']
+      example: 'CRDT'
+    amount:
+      description: Amount value with specified currency
+      type: object
+      required:
+        - value
+        - currency
+      properties:
+        value:
+          type: number
+          example: 50000
+        currency:
+          $ref: "#/components/schemas/currencyCode"
+    currencyCode:
+      description: Currency Code in ISO 4217 format
+      type: string
+      maxLength: 3
+      example: 'CZK'
+    date:
+      description: Date Object
+      type: object
+      required:
+        - dateTime
+      properties:
+        dateTime:
+          $ref: "#/components/schemas/ISO8601DateTime"
+    ISO8601DateTime:
+      description: Date Time timestamp in ISO 8601 Date format
+      type: string
+      format: date-time
+      example: '2016-09-05T00:00:00+01:00'
+    ISO8601Date:
+      description: Date in ISO 8601 Date format
+      type: string
+      format: date
+      example: '2017-01-31'
+    balanceCheckResponse:
+      description: Check user account balance response
+      type: object
+      required:
+        - responseIdentification
+        - exchangeIdentification
+        - response
+      properties:
+        responseIdentification:
+          type: integer
+          description: Unique identification of response to query for Balance Check (from ASPSP).
+          example: 98765
+        exchangeIdentification:
+          type: string
+          description: Repeated identification of a payment transaction (query for Balance Check) from the issuer of the card to which the request for Balance Check linked to the account.
+          example: '658576010faf0a23dc'
+        response:
+          type: string
+          description: >
+            Result code of query for Balance Check.
+
+
+            APPR
+
+
+            Enough funds on this account
+
+
+            DECL
+
+
+            Unsufficient funds on this account
+
+          enum: ['APPR', 'DECL']
+          example: 'APPR'
+    exchangeIdentification:
+      description: Clear query identification
+      type: string
+      example: '658576010faf0a23dc'
+    card:
+      description: Transaction card
+      type: object
+      required:
+        - maskedPan
+      properties:
+        cardholderName:
+          description: Card holder name
+          type: string
+          example: 'Jan Novák'
+        maskedPAN:
+          description: Masked card number
+          type: string
+          example: '1234***********6789'
+    debtorAccount:
+      description: Users account information
+      type: object
+      required:
+        - identification
+      properties:
+        identification:
+          description: Payer account identifier
+          type: object
+          required:
+            - iban
+          properties:
+            iban:
+              description: Account IBAN identification
+              type: string
+              example: 'CZ0708000000001019382023'
+        currency:
+          $ref: "#/components/schemas/currencyCode"
+    creditorAccount:
+      description: Users account information
+      type: object
+      required:
+        - identification
+      properties:
+        identification:
+          description: Payee account identifier
+          type: object
+          required:
+            - iban
+          properties:
+            iban:
+              description: Account IBAN identification
+              type: string
+              example: 'CZ0708000000001019382023'
+        currency:
+          $ref: "#/components/schemas/currencyCode"
+    merchant:
+      description: Merchant executing the transaction
+      type: object
+      required:
+        - identification
+        - shortName
+        - commonName
+        - merchantCategoryCode
+      properties:
+        identification:
+          description: 'Merchant identification'
+          type: string
+          example: '471 16 129'
+        type:
+          description: >
+            Merchant type
+
+
+            OPOI
+
+
+            OriginatingPOI: Point Of Interaction initiating the card payment transaction.
+
+
+            MERC
+
+
+            Merchant: Merchant providing goods and service in the card payment transaction.
+
+
+            ACCP
+
+
+            Acceptor: Card acceptor, party accepting the card and presenting transaction data to the acquirer.
+
+
+            ITAG
+
+
+            IntermediaryAgent: Party acting on behalf of other parties to process or forward data to other parties.
+
+
+            ACQR
+
+
+            Acquirer: Entity acquiring card transactions.
+
+
+            CISS
+
+
+            CardIssuer: Party that issues cards.
+
+
+            DLIS
+
+
+            DelegateIssuer: Party to whom the card issuer delegates to authorise card payment transactions.
+
+          type: string
+          enum: ['OPOI', 'MERC', 'ACCP', 'ITAG', 'ACQR', 'CISS', 'DLIS']
+          example: 'MERC'
+        shortName:
+          description: Merchant name
+          type: string
+          example: 'NEOLUXOR'
+        commonName:
+          description: Merchant name as stated in the payment receipt
+          type: string
+          example: 'Neoluxor s.r.o.'
+        address:
+          description: Merchant address
+          type: string
+          example: 'Hlavní 5, Praha 1'
+        countryCode:
+          description: Merchant country by ISO 3166 (2alphanumeric characters code version)
+          type: string
+          example: 'CZ'
+        merchantCategoryCode:
+          description: Merchant code following the transaction type (ISO 18245)
+          type: string
+          minLength: 3
+          maxLength: 4
+          example: '5192'
+    transactionDetails:
+      description: Transaction details
+      type: object
+      required:
+        - totalAmount
+        - currency
+      properties:
+        totalAmount:
+          type: number
+          example: 10050.15
+        currency:
+          $ref: "#/components/schemas/currencyCode"
+    creditDebitIndicator:
+      description: >
+        Indication of whether this is a debit payment or credit payment in the account.
+
+
+        DBIT: To the debit of
+
+
+        CRDT: In other cases
+
+
+        ```DBIT``` if the transaction reduces the account balance and ```CRDT``` if the transaction increases the account balance (specifically, e.g. DBIT in the case of an outgoing transaction, or e.g. payment of fees and CRDT for an incoming transaction).
+
+      type: string
+      enum: ['CRDT', 'DBIT']
+      example: 'DBIT'
+    usersAccountTransactionDateObject:
+      description: Date Object
+      type: object
+      properties:
+        date:
+          allOf:
+            - $ref: '#/components/schemas/ISO8601DateTime'
+          example: '2017-01-31T00:00:00.000+01'
+    bankTransactionCode:
+      description: The code of banking transaction according to the code list of the Czech Banking Association assigned to a specific payment. Each bank uses an own code list to identify payments, which is, however, based on the 1st to 3rd level of transaction code list according to the CBA Standard for camt.053.
+      type: object
+      required:
+        - proprietary
+      properties:
+        proprietary:
+          description: The code of banking transaction according to the code list of the Czech Banking Association assigned to a specific payment. Each bank uses an own code list to identify payments, which is, however, based on the 1st to 3rd level of transaction code list according to the CBA Standard for camt.053.
+          type: object
+          required:
+            - code
+            - issuer
+          properties:
+            code:
+              description: >
+                The code of banking transaction according to the code list of the Czech Banking Association assigned to a specific payment. Each bank uses an own code list to identify payments, which is, however, based on the 1st to 3rd level of transaction code list according to the CBA Standard for camt.053.
+
+
+                10000101000 Domestic Payment - Outgoing domestic payment
+
+
+                10000102000 Domestic Payment - Outgoing domestic payment - express
+
+
+                10000103000 Domestic Payment - Collection - Credit
+
+
+                10000104000 Domestic Payments - Invoice - Debit
+
+
+                10000105000 Domestic Payment System - Standing Order
+
+
+                10000106000 Domestic Payment System - SIPO
+
+
+                10000107000 Domestic Payment System - Incoming domestic payment
+
+
+                10000201000 Foreign Payments - Outbound Foreign Payment
+
+
+                10000202000 Foreign Payments - Incoming foreign payment
+
+
+                10000301000 Others - Others
+
+
+                10000401000 SEPA CT - Outgoing SEPA payment
+
+
+                10000402000 SEPA CT - Outgoing SEPA payment - express
+
+
+                10000403000 SEPA CT - Incoming SEPA payment
+
+
+                10000501000 SEPA DD - Incoming SEPA DD Core
+
+
+                10000502000 SEPA DD - Outgoing SEPA DD Core
+
+
+                10000503000 SEPA DD - Incoming SEPA DD B2B
+
+
+                10000504000 SEPA DD - Outgoing SEPA DD B2B
+
+
+                20000101000 Deposit - Deposit without conversion in local currency
+
+
+                20000102000 Deposit - Deposit without conversion in foreign currency
+
+
+                20000103000 Deposit - Deposit with conversion
+
+
+                20000104000 Deposit - Deposit on account in another bank
+
+
+                20000201000 Selection - Choose without conversion in local currency
+
+
+                20000202000 Selection - Choose without conversion in a foreign currency
+
+
+                20000203000 Select - Choose with Conversion
+
+
+                20000301000 Other - Cash Processing
+
+
+                20000302000 Other - Other services
+
+
+                30000101000 ATM - ATM withdrawals
+
+
+                30000102000 ATM - Choice of ATMs abroad
+
+
+                30000103000 ATM - Deposit
+
+
+                30000201000 POS - Card payment at the merchant
+
+
+                30000202000 POS - Cashback
+
+
+                30000203000 POS - Cash advance
+
+
+                30000301000 Other - Other services
+
+
+                40000101000 Domestic Payment - Outgoing Payment
+
+
+                40000102000 Domestic Payment - Incoming Payment
+
+
+                40000103000 Domestic Payment System - Standing Order
+
+
+                40000104000 Domestic Payment System - Other
+
+
+                40000201000 Foreign Payments - Outgoing Payment
+
+
+                40000202000 Foreign Payments - Incoming Payment
+
+
+                40000203000 Foreign Payments - Others
+
+
+                40000301000 SEPA - Outgoing SEPA payment
+
+
+                40000302000 SEPA - Incoming SEPA payment
+
+
+                40000303000 SEPA - SEPA DD B2C
+
+
+                40000304000 SEPA - SEPA DD B2B
+
+
+                40000401000 Cash operations - Deposit
+
+
+                40000402000 Cash Operations - Selection
+
+
+                40000403000 Cash operations - Other
+
+
+                40000501000 Card Operations - ATM
+
+
+                40000502000 Card Operations - POS
+
+
+                40000503000 Card Operations - Others
+
+
+                40000601000 Others - Loans
+
+
+                40000602000 Others - Checks
+
+
+                40000603000 Others - Trade finance
+
+
+                40000604000 Others - Treasury
+
+
+                40000605000 Other - Other services
+
+
+                50000201001 SEPA DD - SEPA DD B2C - Return
+
+
+                50000201002 SEPA DD - SEPA DD B2C - Refund
+
+
+                50000201003 SEPA DD - SEPA DD B2C - Reversal
+
+
+                50000201004 SEPA DD - SEPA DD B2C - Reject
+
+
+                50000201005 SEPA DD - SEPA DD B2C - Refusal
+
+
+                50000201006 SEPA DD - SEPA DD B2C - Revocation
+
+
+                50000201007 SEPA DD - SEPA DD B2C - Request for cancellation
+
+
+                50000202001 SEPA DD - SEPA DD B2B - Return
+
+
+                50000202002 SEPA DD - SEPA DD B2B - Refund
+
+
+                50000202003 SEPA DD - SEPA DD B2B - Reversal
+
+
+                50000202004 SEPA DD - SEPA DD B2B - Reject
+
+
+                50000202005 SEPA DD - SEPA DD B2B - Refusal
+
+
+                50000202006 SEPA DD - SEPA DD B2B - Revocation
+
+
+                50000202007 SEPA DD - SEPA DD B2B - Request for cancellation
+
+
+                90000101000 Loans
+
+
+                90000201000 Interest
+
+
+                90000301000 Checks
+
+
+                90000401000 Trade finance
+
+
+                90000501000 Treasury
+
+
+                90000601000 Bonuses
+
+
+                90000701000 Other services
+
+              type: string
+              enum: ['10000101000', '10000102000', '10000103000', '10000104000', '10000105000', '10000106000', '10000107000', '10000201000', '10000202000', '10000301000', '10000401000', '10000402000', '10000403000', '10000501000', '10000502000', '10000503000', '10000504000', '20000101000', '20000102000', '20000103000', '20000104000', '20000201000', '20000202000', '20000203000', '20000301000', '20000302000', '30000101000', '30000102000', '30000103000', '30000201000', '30000202000', '30000203000', '30000301000', '40000101000', '40000102000', '40000103000', '40000104000', '40000201000', '40000202000', '40000203000', '40000301000', '40000302000', '40000303000', '40000304000', '40000401000', '40000402000', '40000403000', '40000501000', '40000502000', '40000503000', '40000601000', '40000602000', '40000603000', '40000604000', '40000605000', '50000201001', '50000201002', '50000201003', '50000201004', '50000201005', '50000201006', '50000201007', '50000202001', '50000202002', '50000202003', '50000202004', '50000202005', '50000202006', '50000202007', '90000101000', '90000201000', '90000301000', '90000401000', '90000501000', '90000601000', '90000701000']
+              example: '40000101000'
+            issuer:
+              description: Identification of the code list issuer for banking transactions which acquires the value of the CBA.
+              type: string
+              example: 'CBA'
+    transactionRelatedPartyAccount:
+      description: Information on the account payer (deptor) or payee (creditor). It is according to the payment direction, and filled in in the case of counterparty.
+      type: object
+      required:
+        - identification
+      properties:
+        identification:
+          description: Identification of account payer (deptor) or payee (creditor) type.
+          type: object
+          properties:
+            iban:
+              description: Payer (deptor) or payee (creditor) account no. in the international format of IBAN account no.
+              type: string
+              example: 'CZ0827000000002108589434'
+            other:
+              description: Payer (deptor) or payee (creditor) account no. in other/local format of account no. Not implemented.
+              type: object
+              required:
+                - identification
+              properties:
+                identification:
+                  description: The value of payer (deptor) or payee (creditor) account no. in other/local format of account no.
+                  type: string
+                  example: '0000002108589434'
+        currency:
+          description: Payer (deptor) or payee (creditor) account currency.
+          allOf:
+            - $ref: '#/components/schemas/currencyCode'
+        name:
+          description: Payer (deptor) or payee (creditor) account name.
+          type: string
+          example: 'Jan Novák'
+    transactionRelatedAgentObject:
+      description: Information on the payer (deptor) or payee (creditor) bank. It is according to the payment direction, and filled in in the case of counterparty.
+      type: object
+      required:
+        - financialInstitutionIdentification
+      properties:
+        financialInstitutionIdentification:
+          description: Payer (deptor) or payee (creditor) bank code in the international format BIC / SWIFT code.
+          type: object
+          properties:
+            bic:
+              description: BIC / SWIFT code of the payer (deptor) or payee (creditor) bank
+              type: string
+              example: 'BACXCZPP'
+            name:
+              description: Payer (deptor) or payee (creditor) bank code as stated in the code list of world banks (SWIFT Directory).
+              type: string
+              example: 'UNCRITMMXXX'
+            other:
+              description: Other payer (deptor) or payee (creditor) bank identification.
+              type: object
+              required:
+                - identification
+              properties:
+                identification:
+                  description: Other payer (deptor) or payee (creditor) bank identification, mainly in the form of the so-called local bank code.
+                  type: string
+                  example: '2700'
+    remittanceInformation:
+      description: Additional payment information.
+      type: object
+      properties:
+        unstructured:
+          description: Additional payment information filled in in the payment as unstructured information.  If the payment states several repetitions of unstructured record supplementing payment information, then only the first of them will be considered.
+          type: string
+          example: '/VS/123456/KS/456789/SS/879213546'
+        structured:
+          description: The completion of payment symbols (variable, specific and constant) is expected.If the payment does not have a variable, specific or constant symbol, then the entire Structured Remittance Information will be left empty.
+          type: object
+          properties:
+            creditorReferenceInformation:
+              description: To display information on variable, specific and constant symbol.
+              type: object
+              properties:
+                reference:
+                  description: "Start the field with the VS code: (for variable symbol), or SS: (for specific symbol) or KS: (for constant symbol). In one repetition of the reference field, all three symbols may be stated, each time maximum one repetition of each individual symbol.The method of recording symbols is VS:|KS:|SS:)[0- 9]{1,10}."
+                  type: string
+                  example: '"VS:123456","KS:456789","SS:879213546"'
+    usersAccountTransaction:
+      description: Transaction record
+      type: object
+      required:
+        - amount
+        - creditDebitIndicator
+        - status
+        - bookingDate
+        - valueDate
+        - bankTransactionCode
+        - entryDetails
+      properties:
+        entryReference:
+          description: Identification no. of the payment assigned by the bank.
+          type: string
+          example: 'RB-4567813'
+        amount:
+          allOf:
+            - $ref: "#/components/schemas/amount"
+          properties:
+            value:
+              example: 105.25
+        creditDebitIndicator:
+          $ref: "#/components/schemas/creditDebitIndicator"
+        status:
+          description: Transaction status,  realized transactions with the constant BOOK, or yeat unrealized transactions with the constant PDNG.
+          type: string
+          enum: ['BOOK', 'PDNG']
+          example: 'BOOK'
+        bookingDate:
+          description: Date of processing of the payment by the bank
+          allOf:
+            - $ref: '#/components/schemas/usersAccountTransactionDateObject'
+        valueDate:
+          description: Valuta date
+          allOf:
+            - $ref: '#/components/schemas/usersAccountTransactionDateObject'
+        bankTransactionCode:
+          $ref: '#/components/schemas/bankTransactionCode'
+        entryDetails:
+          description: Transaction details. The level repeats only for the given item
+          type: object
+          required:
+            - transactionDetails
+          properties:
+            transactionDetails:
+              description: Payment details. The level repeats only for the given item.
+              type: object
+              required:
+                - relatedParties
+                - relatedAgents
+              properties:
+                references:
+                  description: A set of references unambiguously identifying the payment.
+                  type: object
+                  properties:
+                    paymentId:
+                      description: Id of initiated payment. The identifier of the payment from the PISP service
+                      type: string
+                      example: '898165198413'
+                    paymentInformationIdentification:
+                      description: Specific symbol
+                      type: string
+                      example: 'xxxxxxxxxxxx1248'
+                    instructionIdentification:
+                      description: Constant symbol
+                      type: string
+                      example: '54321'
+                    endToEndIdentification:
+                      description: Variable symbol
+                      type: string
+                      example: '0250117002'
+                    chequeNumber:
+                      description: For cheque transactions there may be a cheque number; for card transactions there may be a card number with asterisks. The card no. is each time in the format xxxxxxxxxxxx1234 where according to the standard, only 0-9 may be used (8-28 char.) i.e. without illustrative xxxx.
+                      type: string
+                      example: 'xxxxxxxxxxxx1248'
+                amountDetails:
+                  description: Details of the payment amount, especially if it is a conversion payment or cashback.
+                  type: object
+                  properties:
+                    instructedAmount:
+                      description: Amount and currency of payment in the currency that was required by the client for transfer. E.g., for intra-bank payments, the payer account currency and the payment currency if the client required the payment in the payer account currency.
+                      type: object
+                      properties:
+                        amount:
+                          allOf:
+                            - $ref: '#/components/schemas/amount'
+                          properties:
+                            value:
+                              example: 10
+                            currency:
+                              example: 'GBP'
+                    counterValueAmount:
+                      description: The amount and currency of payment in the client account currency after conversion of amount that was required by the client for transfer.
+                      type: object
+                      required:
+                        - amount
+                      properties:
+                        amount:
+                          allOf:
+                            - $ref: '#/components/schemas/amount'
+                          properties:
+                            value:
+                              example: 105.25
+                        currencyExchange:
+                          description: Information on currencies and exchange rates used.
+                          type: object
+                          required:
+                            - sourceCurrency
+                            - exchangeRate
+                          properties:
+                            sourceCurrency:
+                              description: Client account currency (source/original currency/payer account currency for intrabank conversion payments).
+                              allOf:
+                                - $ref: '#/components/schemas/currencyCode'
+                            targetCurrency:
+                              description: Payment currency (End/target currency/payee account currency for intrabank conversion payments).
+                              example: 'GBP'
+                              allOf:
+                                - $ref: '#/components/schemas/currencyCode'
+                            exchangeRate:
+                              description: The exchange rate used to charge a payment. Only one rate is filled in, even in the case of cross conversion.
+                              type: number
+                              example: 10.525
+                relatedParties:
+                  description: Information on the payer, the payer's account and the original payer and payee, the payee's account and the final payee in the payment.
+                  type: object
+                  required:
+                    - debtorAccount
+                    - creditorAccount
+                  properties:
+                    debtor:
+                      description: Information on the payer. It is according to the payment direction, and filled in in the case of counterparty.
+                      type: object
+                      properties:
+                        name:
+                          description: Payer name.
+                          type: string
+                          example: 'Novák Jan'
+                    debtorAccount:
+                      $ref: '#/components/schemas/transactionRelatedPartyAccount'
+                    creditor:
+                      description: Information on the payee. It is according to the payment direction, and filled in in the case of counterparty.
+                      type: object
+                      properties:
+                        name:
+                          description: Payee name.
+                          type: string
+                          example: 'Novák Jan'
+                    creditorAccount:
+                      $ref: '#/components/schemas/transactionRelatedPartyAccount'
+                    proprietary:
+                      description: For more detailed identification of on which ATM the card transaction occurred.
+                      type: object
+                      properties:
+                        type:
+                          description: For identification of whether for the card transaction it is own / external ATM.
+                          type: string
+                        party:
+                          description: For identification of the ATM name/owner.
+                          type: object
+                          properties:
+                            name:
+                              description: For identification of ATM name/location.
+                              type: string
+                              example: 'Česká spořitelna, a.s. - ATM, CENTROTEX, a. s, nám. Hrdinů 1634/3, 140 00 Praha 4-Nusle'
+                relatedAgents:
+                  description: Information on the payer bank and the payee bank in the payment.
+                  type: object
+                  required:
+                    - debtorAgent
+                    - creditorAgent
+                  properties:
+                    debtorAgent:
+                      $ref: '#/components/schemas/transactionRelatedAgentObject'
+                    creditorAgent:
+                      $ref: '#/components/schemas/transactionRelatedAgentObject'
+                remittanceInformation:
+                  $ref: '#/components/schemas/remittanceInformation'
+                additionalRemittanceInformation:
+                  description: Additional free text information for payer of up to 140 characters.
+                  type: string
+                  example: 'Platba za plyn - Bohemia Energy'
+    paymentIdentification:
+      description: Payment identification
+      type: object
+      properties:
+        instructionIdentification:
+          description: Instruction identification. TPP can provide an optional identification to pair/validate instruction on their side.
+          type: string
+          example: 'NejakeID41785962314574'
+    paymentIdentificationInResponse:
+      description: Payment identification
+      type: object
+      required:
+        - transactionIdentification
+      properties:
+        instructionIdentification:
+          description: Instruction identification (if provided in request)
+          type: string
+          example: 'NejakeID41785962314574'
+        transactionIdentification:
+          description: Transaction identification
+          type: string
+          example: '033225570000078020091'
+    paymentTypeInformation:
+      description: Payment type information
+      type: object
+      properties:
+        instructionPriority:
+          description: >
+            Instruction priority
+
+            If the element is not filled in, the payer's provider assigns a NORM value and makes a payment by default.
+
+            "NORM" means same as in our mobile app -- use instant payment if available, otherwise standard payment
+
+            "INST" means that we want instant payment, and if it is not available at the time of this api call, you would get an error.
+
+            In case of availability of the instant payment changes between the payment initiation and the payment processing, there is fall back to a standard payment.
+
+          type: string
+          enum: ['NORM', 'INST']
+          example: 'NORM'
+    paymentTypeInformationInResponse:
+      allOf:
+        - $ref: '#/components/schemas/paymentTypeInformation'
+      required:
+        - serviceLevel
+      properties:
+        serviceLevel:
+          description: Service level
+          type: object
+          required:
+            - code
+          properties:
+            code:
+              description: >
+                Service level Code
+
+
+                DMCT
+
+
+                [DoMestic Credit Transfer] Domestic payment
+
+
+                ESCT
+
+
+                [SEPA Credit Transfer] – SEPA paymen
+
+
+                XBCT
+
+
+                [Cross-Border Credit Transfer] – Cross border payment[SEPA Credit Transfer] – SEPA payment
+
+
+                EXCT
+
+
+                [EEA X-border Credit Transfers] – Cross border payment within the EEP
+
+
+                NXCT
+
+
+                [Non-EEA X-border Credit Transfers] – Cross border payment outside the EEP
+
+              type: string
+              enum: ['DMCT', 'ESCT', 'XBCT', 'EXCT', 'NXCT']
+              example: 'DMCT'
+    signInfo:
+      description: Status information and id of unauthorized transactions
+      type: object
+      required:
+        - state
+      properties:
+        state:
+          allOf:
+            - $ref: '#/components/schemas/authorizationState'
+        signId:
+          description: Identifier of the authorization process of a particular transaction.
+          type: string
+          example: '3fa85f64-5717-4562-b3fc-2c963f66afa6'
+    authorizationState:
+      description: >
+        Transaction authorization status
+
+
+        WAITING_FOR_SIGN
+
+
+        Waiting for user to authorize transaction
+
+
+        PROCESSING
+
+
+        Processing authorization
+
+
+        DONE
+
+
+        Transaction has been authorized
+
+
+        REFUSED
+
+
+        User or bank has refused the transaction
+
+
+        CANCELLING
+
+
+        Authorization is being cancelled
+
+
+        CANCELED
+
+
+        Authorization has been cancelled
+
+
+        EXPIRING
+
+
+        Authorization is expiring
+
+
+        EXPIRED
+
+
+        Authorization has expired
+
+      type: string
+      enum: ['WAITING_FOR_SIGN', 'PROCESSING', 'DONE', 'REFUSED', 'CANCELLING', 'CANCELED', 'EXPIRING', 'EXPIRED']
+      example: 'WAITING_FOR_SIGN'
+    instructionStatusInitial:
+      description: >
+        Status of entered payment
+
+
+        ACTC
+
+
+        [AcceptedTechnicalValidation] - Authentication and syntactical and semantical validation are successful
+
+      type: string
+      enum: ['ACTC']
+      example: 'ACTC'
+    instructionStatus:
+      description: >
+        Status of entered payment
+
+
+        ACTC
+
+
+        [AcceptedTechnicalValidation] - Authentication and syntactical and semantical validation are successful
+
+
+        RJCT
+
+
+        [Rejected] - Payment initiation or individual transaction included in the payment initiation has been rejected
+
+
+        ACSP
+
+
+        [AcceptedSettlementInProcess] - All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution
+
+
+        ACSC
+
+
+        [AcceptedSettlementCompleted] - Settlement on the debtor´s account has been completed.Usage: this can be used by the first agent to report to the debtor that the transaction has been completed.Warning: this status is provided for transaction status reasons, not for financial information. It can only be used after bilateral agreement
+
+        CUST
+
+
+        [RequestedByCustomer] - Cancellation requested by the Debtor
+
+
+        ACWC
+
+
+        [AcceptedWithChange] - Instruction is accepted but a change will be made, such as date or remittance not sent
+
+      type: string
+      enum: ['ACTC', 'RJCT', 'ACSP', 'ACSC', 'ACWC']
+      example: 'ACWC'
+    instructionStatusOfStandingOrder:
+      description: >
+        Status of entered payment
+
+
+        ACTC
+
+
+        [AcceptedTechnicalValidation] - Authentication and syntactical and semantical validation are successful
+
+
+        RJCT
+
+
+        [Rejected] - Payment initiation or individual transaction included in the payment initiation has been rejected
+
+
+        ACSP
+
+
+        [AcceptedSettlementInProcess] - All preceding checks such as technical validation and customer profile were successful and therefore the payment initiation has been accepted for execution
+
+
+        CUST
+
+
+        [RequestedByCustomer] - Cancellation requested by the Debtor
+
+
+        ACSC
+
+
+        [AcceptedSettlementCompleted] – Standing order on the debtor's account has been completed
+
+      type: string
+      enum: ['ACTC', 'RJCT', 'ACSP', 'CUST', 'ACSC']
+      example: 'ACSP'
+    pollInterval:
+      description: Value in milliseconds how often I can make requests.
+      type: number
+      example: 1000
+    statusChangeInfo:
+      description: >
+        Specifies the change which was made to the instruction. Used with istructionStatus "ACWC" [AcceptedWithChange].
+
+
+        If there is a change, then the change is specified by relevant error code (see error reponses below).
+
+      type: string
+      example: 'DT01'
+    requestedExecutionDate:
+      description: Requested date of payment - Date in ISO 8601 Date format
+      type: string
+      format: date
+      example: '2017-01-31'
+    standingOrder:
+      description: Structure describing the parameters of the standing orders.
+      type: object
+      required:
+        - execution
+      properties:
+        alias:
+          description: Description resp. the user-defined standing order payment name.
+          type: string
+          example: 'Payments for lunch - kindergarten Michal'
+        execution:
+          description: Features of execution a standing order for payment.
+          type: object
+          required:
+            - mode
+            - modeDue
+            - interval
+            - intervalDue
+          properties:
+            mode:
+              description: >
+                The execution mode defines when or how standing order will be cancelled, processed the last time. Possible values:
+
+
+                UNTIL_CANCELLATION
+
+
+                standing order is valid forever and must be cancelled by client
+
+              type: string
+              enum: ['UNTIL_CANCELLATION']
+              example: 'UNTIL_CANCELLATION'
+            modeDue:
+              description: >
+                The execution due mode defines how the date when order should be executed is specified. Possible values:
+
+
+
+
+                DUE_OR_BEFORE_DAY_OF_MONTH
+
+
+                order is defined as a specific day of the month or the previous day if the day falls on a non-banking day
+
+              type: string
+              enum: ['DUE_OR_BEFORE_DAY_OF_MONTH']
+              example: 'DUE_OR_BEFORE_DAY_OF_MONTH'
+            interval:
+              description: >
+                Execution interval defines how often order is executed. Possible values: WEEKLY, MONTHLY, QUARTERLY, HALFYEARLY, YEARLY.
+
+              type: string
+              enum: ['WEEKLY', 'MONTHLY', 'QUARTERLY', 'HALFYEARLY', 'YEARLY']
+              example: 'MONTHLY'
+        validity:
+          description: Features of execution a standing order for payment.
+          type: object
+          properties:
+            lastExecutionDate:
+              description: Date when the last order will be processed. Null value responds to ending by the user.
+              allOf:
+                - $ref: '#/components/schemas/ISO8601Date'
+    standingOrderRealizedPayments:
+      description: Array of transaction identificators, conditional if it is an authorized standing order
+      type: array
+      items:
+        type: object
+        required:
+          - transactionIdentification
+        properties:
+          transactionIdentification:
+            description: Identifier of estabilished transaction
+            type: string
+            example: 'someId56668746523322'
+          date:
+            description: Due date/payment foreign currency in the format ISODate, , or ISODateTime, i.e. YYYY-MM-DD, or YYYYMM-DDThh:mm:ss.sTZD, depending on the transaction type and method how the bank presents data (and time) of due date/ payment foreign currency. Mainly for card or cash transactions it is posted as ISODateTime.
+            allOf:
+              - $ref: '#/components/schemas/ISO8601DateTime'
+    errorsResponse:
+      description: Payload of error response
+      type: object
+      properties:
+        error:
+          description: Error responses
+          type: array
+          items:
+            $ref: "#/components/schemas/error"
+    error:
+      description: Error response
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          description: Error code
+          type: string
+          example: 'ERROR_CODE'
+        message:
+          description: Error specification
+          type: string
+    standingOrderDetails:
+      type: object
+      required:
+        - amount
+        - requestedExecutionDate
+        - standingOrder
+        - debtorAccount
+        - creditorAccount
+      properties:
+        standingOrderIdentification:
+          $ref: "#/components/schemas/standingOrderIdentification"
+        paymentTypeInformation:
+          $ref: "#/components/schemas/paymentTypeInformation"
+        amount:
+          description: Payment amount
+          type: object
+          required:
+            - instructedAmount
+          properties:
+            instructedAmount:
+              $ref: "#/components/schemas/amount"
+        requestedExecutionDate:
+          $ref: "#/components/schemas/requestedExecutionDate"
+        standingOrder:
+          $ref: "#/components/schemas/standingOrder"
+        debtorAccount:
+          $ref: "#/components/schemas/debtorAccount"
+        creditorAccount:
+          $ref: "#/components/schemas/creditorAccount"
+        remittanceInformation:
+          allOf:
+            - $ref: "#/components/schemas/remittanceInformation"
+          properties:
+            additionalRemittanceInformation:
+              description: Additional free text information for payer of up to 140 characters.
+              type: string
+              example: 'Platba za MŠ …'
+    updateStandingOrderResponse:
+      properties:
+        standingOrderIdentification:
+          $ref: "#/components/schemas/standingOrderIdentification"
+        signInfo:
+          $ref: "#/components/schemas/signInfo"
+        instructionStatus:
+          $ref: "#/components/schemas/instructionStatusInitial"
+        statusChangeInfo:
+          $ref: "#/components/schemas/statusChangeInfo"
+    deleteStandingOrderResponse:
+      properties:
+        standingOrderIdentification:
+          $ref: "#/components/schemas/standingOrderIdentification"
+        signInfo:
+          $ref: "#/components/schemas/signInfo"
+        instructionStatus:
+          $ref: "#/components/schemas/instructionStatusInitial"
+        statusChangeInfo:
+          $ref: "#/components/schemas/statusChangeInfo"
+    standingOrderIdentification:
+      description: Identifier of established standing order instruction
+      allOf:
+        - $ref: "#/components/schemas/paymentIdentificationInResponse"
+    updateStandingOrderRequest:
+      type: object
+      required:
+        - amount
+        - requestedExecutionDate
+        - standingOrder
+        - debtorAccount
+        - creditorAccount
+      properties:
+        standingOrderIdentification:
+          description: Standing order identification
+          allOf:
+            - $ref: "#/components/schemas/paymentIdentification"
+        paymentTypeInformation:
+          $ref: "#/components/schemas/paymentTypeInformation"
+        amount:
+          description: Payment amount
+          type: object
+          required:
+            - instructedAmount
+          properties:
+            instructedAmount:
+              $ref: "#/components/schemas/amount"
+        requestedExecutionDate:
+          $ref: "#/components/schemas/requestedExecutionDate"
+        standingOrder:
+          $ref: "#/components/schemas/standingOrder"
+        debtorAccount:
+          $ref: "#/components/schemas/debtorAccount"
+        creditorAccount:
+          $ref: "#/components/schemas/creditorAccount"
+        remittanceInformation:
+          allOf:
+            - $ref: "#/components/schemas/remittanceInformation"
+          properties:
+            additionalRemittanceInformation:
+              description: Additional free text information for payer of up to 140 characters.
+              type: string
+              example: 'Platba za MŠ …'
+tags:
+  - name: AISP
+    description: |
+      AISP (Account Information Services) aggregates financial data from multiple accounts to offer users a consolidated view, enhancing financial management and transparency.
+  - name: PISP
+    description: |
+      PISP (Payment Initiation Services) facilitates direct payment initiation on behalf of users, ensuring secure authorization and enabling real-time transactions.
+  - name: CISP
+    description: |
+      CISP (Card Issuing Service) specializes in issuing payment cards, managing authorization processes, and monitoring card transactions for security and regulatory compliance.

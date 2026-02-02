@@ -1,0 +1,46 @@
+{
+  "name": "backend-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon src/server.ts",
+    "start": "ts-node src/server.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^25.1.0",
+    "@types/swagger-parser": "^4.0.3",
+    "@types/uuid": "^10.0.0",
+    "dotenv": "^17.2.3",
+    "nodemon": "^3.1.11",
+    "prisma": "^5.22.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
+    "@types/multer": "^2.0.0",
+    "ajv-draft-04": "^1.0.0",
+    "axios": "^1.13.4",
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "js-yaml": "^4.1.1",
+    "multer": "^2.0.2",
+    "ollama": "^0.6.3",
+    "swagger-parser": "^10.0.3",
+    "uuid": "^13.0.0"
+  }
+}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tester Backend Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for a slightly better look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>AI Tester Dashboard</h1>
+            <p class="subtitle">Backend API Demonstration</p>
+        </header>
+
+        <main>
+            <!-- Sidebar: Create & List Projects -->
+            <section class="sidebar">
+                <div class="card create-project-card">
+                    <h2>Create Project</h2>
+                    <form id="createProjectForm">
+                        <div class="form-group">
+                            <label for="projectName">Project Name</label>
+                            <input type="text" id="projectName" placeholder="e.g., E-commerce API" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Create Project</button>
+                    </form>
+                </div>
+
+                <div class="card projects-list-card">
+                    <h2>Projects</h2>
+                    <div id="projectsList" class="list-group">
+                        <!-- Projects will be injected here -->
+                        <div class="loading">Loading projects...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Main Content: Project Details & APIs -->
+            <section class="content-area" id="contentArea">
+                <div class="empty-state">
+                    <h3>Select a project to view details</h3>
+                    <p>Choose a project from the sidebar or create a new one.</p>
+                </div>
+
+                <!-- Project Detail View (Hidden by default) -->
+                <div id="projectDetail" class="hidden">
+                    <div class="detail-header">
+                        <div>
+                            <h2 id="detailProjectName">Project Name</h2>
+                            <span class="badge" id="detailProjectId">ID: ...</span>
+                        </div>
+                        <button id="deleteProjectBtn" class="btn-danger">Delete Project</button>
+                    </div>
+
+                    <div class="card ingestion-card">
+                        <h3>Ingest Data</h3>
+                        <div class="ingest-type-toggle">
+                            <label><input type="radio" name="ingestType" value="url" checked> URL</label>
+                            <label><input type="radio" name="ingestType" value="file"> File Upload</label>
+                        </div>
+                        <form id="ingestForm" class="ingest-form">
+                            <div id="ingestUrlGroup" class="ingest-input-group">
+                                <input type="url" id="ingestUrl"
+                                    placeholder="Enter OpenAPI Spec URL (e.g., https://petstore.swagger.io/v2/swagger.json)">
+                            </div>
+                            <div id="ingestFileGroup" class="ingest-input-group hidden">
+                                <input type="file" id="ingestFile" accept=".json,.yaml,.yml">
+                            </div>
+                            <button type="submit" class="btn-primary">Ingest</button>
+                        </form>
+                    </div>
+
+                    <div class="card apis-card">
+                        <h3>APIs / Ingested Data</h3>
+                        <div id="apiList" class="list-group">
+                            <!-- APIs will be injected here -->
+                            <p class="text-muted">No APIs found for this project.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Detail View (Hidden by default) -->
+                <div id="apiDetailView" class="hidden">
+                    <div class="api-actions">
+                        <button id="backToProject" class="btn-secondary">&larr; Back to Project</button>
+                        <button id="analyzeBtn" class="btn-primary">Analyze API</button>
+                    </div>
+
+                    <!-- Analysis Results (Hidden by default) -->
+                    <div id="analysisResult" class="card analysis-result hidden">
+                        <h3>Analysis Results</h3>
+                        <div id="analysisContent"></div>
+                    </div>
+                    <div class="card api-full-detail">
+                        <h2 id="apiMethodEndpoint"><span class="method">GET</span> /endpoint</h2>
+                        <p id="apiSummary">Summary of the API</p>
+
+                        <div class="code-block">
+                            <h4>Description</h4>
+                            <p id="apiDescription">No description available.</p>
+                        </div>
+
+                        <div class="grid-2-col">
+                            <div class="code-block">
+                                <h4>Request Schema</h4>
+                                <pre id="apiRequestSchema">{}</pre>
+                            </div>
+                            <div class="code-block">
+                                <h4>Response Schema</h4>
+                                <pre id="apiResponseSchema">{}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
