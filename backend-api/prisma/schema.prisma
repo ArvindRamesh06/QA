@@ -1,47 +1,208 @@
 generator client {
   provider = "prisma-client-js"
 }
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+// ----------------------------------------------------------------------
+// AUTH / SAAS LAYER (PRESERVED)
+// ----------------------------------------------------------------------
+
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
   password  String
   projects  Project[]
-  createdAt DateTime  @default(now())
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  @@map("users")
 }
+
+// ----------------------------------------------------------------------
+// SYSTEM CORE (LOCKED DESIGN)
+// ----------------------------------------------------------------------
+
 model Project {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  
+  // Infrastructure fields (Auth link)
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  
+  // Relations
+  apiSpecs    ApiSpec[]
+  apis        Api[]
+  testRuns    TestRun[]
+
+  createdAt   DateTime @default(now()) @map("created_at")
+  // updatedAt removed from design requirements, but Prisma usually wants it? 
+  // Design "created_at TIMESTAMP NOT NULL DEFAULT now()" -> Implemented.
+
+  @@map("projects")
+}
+
+model ApiSpec {
   id        String   @id @default(uuid())
-  name      String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  apis      Api[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  projectId String   @map("project_id")
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  version   String
+  specHash  String   @map("spec_hash")
+  filePath  String   @map("file_path")
+  
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  @@unique([projectId, specHash])
+  @@map("api_specs")
 }
+
 model Api {
-  id            String     @id @default(uuid())
-  projectId     String
-  project       Project    @relation(fields: [projectId], references: [id])
-  method        String
-  endpoint      String
-  summary       String?
-  description   String?
-  requestSchema Json?      // Stores the parsed request schema
-  responseSchema Json?     // Stores the parsed response schema
-  variables     Variable[]
-  createdAt     DateTime   @default(now())
-  @@unique([projectId, method, endpoint])
+  id          String   @id @default(uuid())
+  projectId   String   @map("project_id")
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  method      String   @db.VarChar(10)
+  path        String
+  operationId String?  @map("operation_id")
+  summary     String?
+  authType    String?  @map("auth_type")
+  
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  request              ApiRequest?
+  responses            ApiResponse[]
+  variables            Variable[]
+  sourceCandidates     DependencyCandidate[] @relation("SourceCandidates")
+  targetCandidates     DependencyCandidate[] @relation("TargetCandidates")
+  sourceDependencies   ApiDependency[]       @relation("SourceDependencies")
+  targetDependencies   ApiDependency[]       @relation("TargetDependencies")
+  executions           TestExecution[]
+
+  @@unique([projectId, method, path])
+  @@map("apis")
 }
+
+model ApiRequest {
+  id         String @id @default(uuid())
+  apiId      String @unique @map("api_id")
+  api        Api    @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  
+  bodySchema Json?  @map("body_schema")
+  headers    Json?
+  queryParams Json? @map("query_params")
+  pathParams  Json? @map("path_params")
+
+  @@map("api_requests")
+}
+
+model ApiResponse {
+  id             String @id @default(uuid())
+  apiId          String @map("api_id")
+  api            Api    @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  
+  statusCode     Int    @map("status_code")
+  responseSchema Json   @map("response_schema")
+
+  @@unique([apiId, statusCode])
+  @@map("api_responses")
+}
+
 model Variable {
-  id             String   @id @default(uuid())
-  apiId          String
-  api            Api      @relation(fields: [apiId], references: [id])
-  name           String
-  type           String   // 'constant', 'user_input', 'dependent'
-  confidence     Float?
-  sourceApiId    String?  // If dependent, possibly link to another API (simplified for now)
-  createdAt      DateTime @default(now())
+  id            String  @id @default(uuid())
+  apiId         String  @map("api_id")
+  api           Api     @relation(fields: [apiId], references: [id], onDelete: Cascade)
+  
+  name          String
+  location      String  // request, response, header
+  varType       String  @map("var_type") // constant, user_input, dependent_candidate
+  dataType      String  @map("data_type")
+  required      Boolean
+  aiConfidence  Float?  @map("ai_confidence")
+
+  @@unique([apiId, name, location])
+  @@map("variables")
+}
+
+model DependencyCandidate {
+  id          String   @id @default(uuid())
+  sourceApiId String   @map("source_api_id")
+  sourceApi   Api      @relation("SourceCandidates", fields: [sourceApiId], references: [id], onDelete: Cascade)
+  
+  targetApiId String   @map("target_api_id")
+  targetApi   Api      @relation("TargetCandidates", fields: [targetApiId], references: [id], onDelete: Cascade)
+  
+  mapping     Json
+  confidence  Float
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Check constraint manually verified or via raw SQL: source_api_id <> target_api_id
+  @@map("dependency_candidates")
+}
+
+model ApiDependency {
+  id          String  @id @default(uuid())
+  sourceApiId String  @map("source_api_id")
+  sourceApi   Api     @relation("SourceDependencies", fields: [sourceApiId], references: [id], onDelete: Cascade)
+  
+  targetApiId String  @map("target_api_id")
+  targetApi   Api     @relation("TargetDependencies", fields: [targetApiId], references: [id], onDelete: Cascade)
+  
+  mapping     Json
+  isRequired  Boolean @map("is_required")
+
+  @@unique([sourceApiId, targetApiId])
+  @@map("api_dependencies")
+}
+
+model TestRun {
+  id            String    @id @default(uuid())
+  projectId     String?   @map("project_id")
+  project       Project?  @relation(fields: [projectId], references: [id])
+  
+  environment   String
+  triggerSource String    @map("trigger_source")
+  startedAt     DateTime  @map("started_at")
+  completedAt   DateTime? @map("completed_at")
+
+  executions    TestExecution[]
+
+  @@map("test_runs")
+}
+
+model TestExecution {
+  id           String   @id @default(uuid())
+  testRunId    String   @map("test_run_id")
+  testRun      TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  
+  apiId        String?  @map("api_id")
+  api          Api?     @relation(fields: [apiId], references: [id])
+  
+  status       String   // PASSED, FAILED, BLOCKED
+  retryCount   Int      @default(0) @map("retry_count")
+  errorMessage String?  @map("error_message")
+
+  artifacts    ExecutionArtifact[]
+
+  @@unique([testRunId, apiId])
+  @@map("test_executions")
+}
+
+model ExecutionArtifact {
+  id              String        @id @default(uuid())
+  testExecutionId String        @map("test_execution_id")
+  testExecution   TestExecution @relation(fields: [testExecutionId], references: [id], onDelete: Cascade)
+  
+  requestData     Json?         @map("request_data")
+  responseData    Json?         @map("response_data")
+  responseTimeMs  Int?          @map("response_time_ms")
+  createdAt       DateTime      @default(now()) @map("created_at")
+
+  @@map("execution_artifacts")
 }

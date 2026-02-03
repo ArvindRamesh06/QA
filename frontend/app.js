@@ -24,12 +24,21 @@ const analysisResult = document.getElementById('analysisResult');
 const analysisContent = document.getElementById('analysisContent');
 const deleteProjectBtn = document.getElementById('deleteProjectBtn');
 
+// Dependency Elements
+const viewApisBtn = document.getElementById('viewApisBtn');
+const viewDepsBtn = document.getElementById('viewDepsBtn');
+const apisView = document.getElementById('apisView');
+const dependenciesView = document.getElementById('dependenciesView');
+const dependenciesList = document.getElementById('dependenciesList');
+const candidatesList = document.getElementById('candidatesList');
+
 // API Details Elements
 const apiMethodEndpoint = document.getElementById('apiMethodEndpoint');
 const apiSummary = document.getElementById('apiSummary');
 const apiDescription = document.getElementById('apiDescription');
-const apiRequestSchema = document.getElementById('apiRequestSchema');
+
 const apiResponseSchema = document.getElementById('apiResponseSchema');
+const apiVariablesList = document.getElementById('apiVariablesList');
 
 let currentApiId = null;
 let currentApi = null;
@@ -41,11 +50,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Event Listeners
-createProjectForm.addEventListener('submit', handleCreateProject);
-backToProjectBtn.addEventListener('click', showProjectDetailView);
-if (ingestForm) ingestForm.addEventListener('submit', handleIngest);
-if (analyzeBtn) analyzeBtn.addEventListener('click', handleAnalyze);
-if (deleteProjectBtn) deleteProjectBtn.addEventListener('click', handleDeleteProject);
+createProjectForm.addEventListener('submit', (e) => {
+    console.log('Interaction: Create Project form submitted');
+    handleCreateProject(e);
+});
+backToProjectBtn.addEventListener('click', () => {
+    console.log('Interaction: Back to Project button clicked');
+    showProjectDetailView();
+});
+if (ingestForm) ingestForm.addEventListener('submit', (e) => {
+    console.log('Interaction: Ingest form submitted');
+    handleIngest(e);
+});
+if (analyzeBtn) analyzeBtn.addEventListener('click', () => {
+    console.log('Interaction: Analyze API button clicked');
+    handleAnalyze();
+});
+if (deleteProjectBtn) deleteProjectBtn.addEventListener('click', () => {
+    console.log('Interaction: Delete Project button clicked');
+    handleDeleteProject();
+});
+
+// Tab Navigation
+viewApisBtn.addEventListener('click', () => {
+    console.log('Interaction: Switched to APIs tab');
+    switchTab('apis');
+});
+viewDepsBtn.addEventListener('click', () => {
+    console.log('Interaction: Switched to Dependencies tab');
+    switchTab('deps');
+});
 
 // Functions
 
@@ -56,6 +90,7 @@ function setupIngestToggle() {
 
     radios.forEach(radio => {
         radio.addEventListener('change', (e) => {
+            console.log(`Interaction: Ingest Type changed to ${e.target.value}`);
             if (e.target.value === 'url') {
                 urlGroup.classList.remove('hidden');
                 fileGroup.classList.add('hidden');
@@ -72,14 +107,16 @@ function setupIngestToggle() {
 }
 
 async function fetchProjects() {
+    console.log('Data: Fetching projects...');
     projectsList.innerHTML = '<div class="loading">Loading projects...</div>';
     try {
         const response = await fetch(`${API_BASE_URL}/projects`);
         if (!response.ok) throw new Error('Failed to fetch projects');
         projects = await response.json();
+        console.log(`Data: Fetched ${projects.length} projects`);
         renderProjectsList();
     } catch (error) {
-        console.error(error);
+        console.error('Error fetching projects:', error);
         projectsList.innerHTML = `<div class="error">Error loading projects: ${error.message}</div>`;
     }
 }
@@ -87,6 +124,7 @@ async function fetchProjects() {
 async function handleCreateProject(e) {
     e.preventDefault();
     const name = projectNameInput.value.trim();
+    console.log(`Action: Creating project "${name}"`);
     if (!name) return;
 
     try {
@@ -101,15 +139,18 @@ async function handleCreateProject(e) {
         if (!response.ok) throw new Error('Failed to create project');
 
         // Refresh list
+        console.log('Action: Project created successfully');
         projectNameInput.value = '';
         await fetchProjects();
     } catch (error) {
+        console.error('Error creating project:', error);
         alert('Error creating project: ' + error.message);
     }
 }
 
 async function handleIngest(e) {
     e.preventDefault();
+    console.log('Action: Handling Ingest...');
     if (!currentProjectId) return;
 
     const ingestType = document.querySelector('input[name="ingestType"]:checked').value;
@@ -123,6 +164,7 @@ async function handleIngest(e) {
         if (ingestType === 'url') {
             const sourceUrl = ingestUrlInput.value.trim();
             if (!sourceUrl) throw new Error('URL is required');
+            console.log(`Action: Ingesting from URL: ${sourceUrl}`);
 
             response = await fetch(`${API_BASE_URL}/ingest`, {
                 method: 'POST',
@@ -132,6 +174,7 @@ async function handleIngest(e) {
         } else {
             const file = ingestFileInput.files[0];
             if (!file) throw new Error('File is required');
+            console.log(`Action: Ingesting file: ${file ? file.name : 'Unknown'}`);
 
             const formData = new FormData();
             formData.append('projectId', currentProjectId);
@@ -149,11 +192,13 @@ async function handleIngest(e) {
         }
 
         const result = await response.json();
+        console.log('Action: Ingestion successful', result);
         alert(`Ingestion Successful! ${result.count} APIs added.`);
         ingestUrlInput.value = '';
         ingestFileInput.value = '';
         fetchProjectApis(currentProjectId);
     } catch (error) {
+        console.error('Ingestion failed:', error);
         alert('Ingestion Error: ' + error.message);
     } finally {
         btn.textContent = originalText;
@@ -162,6 +207,7 @@ async function handleIngest(e) {
 }
 
 async function handleDeleteProject() {
+    console.log(`Action: Requesting delete for project ${currentProjectId}`);
     if (!currentProjectId || !confirm('Are you sure you want to delete this project?')) return;
 
     try {
@@ -171,6 +217,7 @@ async function handleDeleteProject() {
 
         if (!response.ok) throw new Error('Failed to delete project');
 
+        console.log('Action: Project deleted');
         alert('Project deleted successfully');
         projectDetail.classList.add('hidden');
         apiDetailView.classList.add('hidden');
@@ -178,11 +225,13 @@ async function handleDeleteProject() {
         currentProjectId = null;
         await fetchProjects();
     } catch (error) {
+        console.error('Delete failed:', error);
         alert('Error deleting project: ' + error.message);
     }
 }
 
 async function handleAnalyze() {
+    console.log(`Action: Analyzing API ${currentApiId} in Project ${currentProjectId}`);
     if (!currentApiId) return;
 
     analyzeBtn.textContent = 'Analyzing...';
@@ -203,10 +252,24 @@ async function handleAnalyze() {
         }
 
         const result = await response.json();
-        displayAnalysisResult(result);
+        console.log('Action: Analysis complete', result);
+        const count = result.candidates || 0;
+
+        // precise user feedback
+        analyzeBtn.textContent = `Success! Found ${count} candidates`;
+        analyzeBtn.classList.add('btn-success'); // Assuming we might want to style it or just let it be
+
+        // Short delay so user sees the success message
+        setTimeout(() => {
+            console.log('Action: Auto-switching to Dependencies tab');
+            switchTab('deps');
+            analyzeBtn.textContent = 'Analyze API';
+            analyzeBtn.disabled = false;
+        }, 1500);
+
     } catch (error) {
+        console.error('Analysis failed:', error);
         alert('Analysis Error: ' + error.message);
-    } finally {
         analyzeBtn.textContent = 'Analyze API';
         analyzeBtn.disabled = false;
     }
@@ -316,7 +379,10 @@ function renderProjectsList() {
     projects.forEach(project => {
         const item = document.createElement('div');
         item.className = `list-item ${currentProjectId === project.id ? 'active' : ''}`;
-        item.onclick = () => selectProject(project);
+        item.onclick = () => {
+            console.log(`Interaction: Selected project "${project.name}" (${project.id})`);
+            selectProject(project);
+        };
 
         item.innerHTML = `
             <h4>${escapeHtml(project.name)}</h4>
@@ -328,6 +394,7 @@ function renderProjectsList() {
 }
 
 function selectProject(project) {
+    console.log(`Action: Loading Details for Project ${project.id}`);
     currentProjectId = project.id;
     renderProjectsList(); // Re-render to update active state
 
@@ -343,6 +410,7 @@ function selectProject(project) {
 }
 
 async function fetchProjectApis(projectId) {
+    console.log(`Data: Fetching APIs for project ${projectId}...`);
     apiList.innerHTML = '<div class="loading">Loading APIs...</div>';
 
     try {
@@ -352,6 +420,7 @@ async function fetchProjectApis(projectId) {
 
         if (!response.ok) throw new Error('Failed to fetch APIs');
         const apis = await response.json();
+        console.log(`Data: Fetched ${apis.length} APIs`);
         renderApiList(apis);
     } catch (error) {
         console.error(error);
@@ -370,12 +439,15 @@ function renderApiList(apis) {
     apis.forEach(api => {
         const item = document.createElement('div');
         item.className = 'list-item';
-        item.onclick = () => selectApi(api);
+        item.onclick = () => {
+            console.log(`Interaction: Selected API "${api.method} ${api.path}"`);
+            selectApi(api);
+        };
 
         const methodClass = getMethodClass(api.method);
 
         item.innerHTML = `
-            <h4><span style="color:${methodClass}">${api.method}</span> ${escapeHtml(api.endpoint)}</h4>
+            <h4><span style="color:${methodClass}">${api.method}</span> ${escapeHtml(api.path)}</h4>
             <p>${escapeHtml(api.summary || 'No summary')}</p>
         `;
 
@@ -385,22 +457,92 @@ function renderApiList(apis) {
 
 
 function selectApi(api) {
+    console.log(`Action: Viewing API Details for ${api.id}`);
     currentApiId = api.id;
-    currentApi = api;
+    // currentApi = api; // Don't rely on the partial list object
     projectDetail.classList.add('hidden');
     apiDetailView.classList.remove('hidden');
 
+    // Reset UI
+    apiMethodEndpoint.innerHTML = 'Loading...';
+    apiSummary.textContent = '';
+    apiDescription.textContent = '';
+    apiRequestSchema.textContent = '{}';
+    apiResponseSchema.textContent = '{}';
+    apiVariablesList.innerHTML = '<p>Loading details...</p>';
+
+    // Clear previous analysis results
+    analysisResult.classList.add('hidden');
+    analysisContent.innerHTML = '';
+
+    fetchApiDetails(api.id);
+}
+
+async function fetchApiDetails(apiId) {
+    console.log(`Data: Fetching full details for API ${apiId}`);
+    try {
+        const res = await fetch(`${API_BASE_URL}/apis/${apiId}`);
+        if (!res.ok) throw new Error("Failed to fetch API details");
+        const api = await res.json();
+        currentApi = api;
+        console.log('Data: API details loaded', api);
+        renderApiDetails(api);
+    } catch (e) {
+        apiMethodEndpoint.innerHTML = 'Error loading API';
+        console.error(e);
+    }
+}
+
+function renderApiDetails(api) {
     const methodHtml = `<span style="color:${getMethodClass(api.method)}">${api.method}</span>`;
-    apiMethodEndpoint.innerHTML = `${methodHtml} ${escapeHtml(api.endpoint)}`;
+    apiMethodEndpoint.innerHTML = `${methodHtml} ${escapeHtml(api.path)}`;
     apiSummary.textContent = api.summary || 'No summary provided';
     apiDescription.textContent = api.description || 'No description provided';
 
     apiRequestSchema.textContent = JSON.stringify(api.requestSchema || {}, null, 2);
     apiResponseSchema.textContent = JSON.stringify(api.responseSchema || {}, null, 2);
 
-    // Clear previous analysis results
-    analysisResult.classList.add('hidden');
-    analysisContent.innerHTML = '';
+    renderVariablesTable(api.variables || []);
+}
+
+function renderVariablesTable(variables) {
+    if (!variables || variables.length === 0) {
+        apiVariablesList.innerHTML = '<p class="text-muted">No explicit variables found.</p>';
+        return;
+    }
+
+    let html = `
+        <table class="analysis-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Type</th>
+                    <th>Data Type</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    variables.forEach(v => {
+        let typeClass = 'badge constant';
+        if (v.varType === 'user_input') typeClass = 'badge user_input';
+        else if (v.varType === 'dependent_candidate') typeClass = 'badge dependent';
+
+        html += `
+            <tr>
+                <td>${escapeHtml(v.name)}</td>
+                <td><span class="badge" style="background:#f1f5f9">${v.location}</span></td>
+                <td><span class="${typeClass}">${v.varType}</span></td>
+                <td><span style="font-family:monospace; font-size:0.9em">${v.dataType}</span></td>
+                <td>${v.aiConfidence ? (v.aiConfidence * 100).toFixed(0) + '%' : '-'}</td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    apiVariablesList.innerHTML = html;
 }
 
 function showProjectDetailView() {
@@ -431,4 +573,186 @@ function getTypeDescription(type) {
     if (type === 'user_input') return 'Provided by the user.';
     if (type === 'constant') return 'Static value.';
     return '';
+}
+
+// Dependency Management
+function switchTab(tab) {
+    console.log(`Action: Switch Tab -> ${tab}`);
+    if (tab === 'apis') {
+        viewApisBtn.classList.add('active');
+        viewDepsBtn.classList.remove('active');
+        apisView.classList.remove('hidden');
+        dependenciesView.classList.add('hidden');
+    } else {
+        viewDepsBtn.classList.add('active');
+        viewApisBtn.classList.remove('active');
+        dependenciesView.classList.remove('hidden');
+        apisView.classList.add('hidden');
+        fetchDependencyData();
+    }
+}
+
+async function fetchDependencyData() {
+    console.log('Data: Fetching dependencies and candidates...');
+    if (!currentProjectId) return;
+
+    dependenciesList.innerHTML = '<p>Loading dependencies...</p>';
+    candidatesList.innerHTML = '<p>Loading candidates...</p>';
+
+    try {
+        const [depsRes, candRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/projects/${currentProjectId}/dependencies`),
+            fetch(`${API_BASE_URL}/projects/${currentProjectId}/candidates`)
+        ]);
+
+        const deps = await depsRes.json();
+        const candidates = await candRes.json();
+        console.log(`Data: Loaded ${deps.length} dependencies, ${candidates.length} candidates`);
+
+        renderDependencies(deps);
+        renderCandidates(candidates);
+    } catch (error) {
+        console.error("Failed to load dependency data", error);
+        dependenciesList.innerHTML = '<p class="error">Failed to load dependencies.</p>';
+        candidatesList.innerHTML = '<p class="error">Failed to load candidates.</p>';
+    }
+}
+
+function renderDependencies(dependencies) {
+    dependenciesList.innerHTML = '';
+
+    if (dependencies.length === 0) {
+        dependenciesList.innerHTML = '<p class="text-muted">No verified dependencies yet.</p>';
+        return;
+    }
+
+    dependencies.forEach(dep => {
+        const item = document.createElement('div');
+        item.className = 'dependency-item';
+        // Source -> Target
+        item.innerHTML = `
+            <div class="dep-source">
+                <div class="dep-method" style="color:${getMethodClass(dep.sourceApi.method)}">${dep.sourceApi.method}</div>
+                <div class="dep-path">${escapeHtml(dep.sourceApi.path)}</div>
+            </div>
+            <div class="dep-target">
+                <div class="dep-method" style="color:${getMethodClass(dep.targetApi.method)}">${dep.targetApi.method}</div>
+                <div class="dep-path">${escapeHtml(dep.targetApi.path)}</div>
+                <div class="dep-mapping">Map: ${JSON.stringify(dep.mapping)}</div>
+            </div>
+            <div>
+               <span class="badge dependent">Verified</span>
+            </div>
+            <div>
+                <button class="btn-danger" onclick="deleteDependency('${dep.id}')">Delete</button>
+            </div>
+        `;
+        dependenciesList.appendChild(item);
+    });
+}
+
+function renderCandidates(candidates) {
+    candidatesList.innerHTML = '';
+
+    if (candidates.length === 0) {
+        candidatesList.innerHTML = '<p class="text-muted">No AI suggestions found. Run "Analyze API" to find more.</p>';
+        return;
+    }
+
+    candidates.forEach(cand => {
+        const item = document.createElement('div');
+        item.className = 'dependency-item';
+
+        let confClass = 'confidence-low';
+        if (cand.confidence > 0.8) confClass = 'confidence-high';
+        else if (cand.confidence > 0.5) confClass = 'confidence-med';
+
+        item.innerHTML = `
+            <div class="dep-source">
+                <div class="dep-method" style="color:${getMethodClass(cand.sourceApi.method)}">${cand.sourceApi.method}</div>
+                <div class="dep-path">${escapeHtml(cand.sourceApi.path)}</div>
+            </div>
+            <div class="dep-target">
+                <div class="dep-method" style="color:${getMethodClass(cand.targetApi.method)}">${cand.targetApi.method}</div>
+                <div class="dep-path">${escapeHtml(cand.targetApi.path)}</div>
+                <div class="dep-mapping">Map: ${JSON.stringify(cand.mapping)}</div>
+            </div>
+            <div>
+               <span class="${confClass}">${(cand.confidence * 100).toFixed(0)}% Match</span>
+            </div>
+            <div>
+                <button class="btn-success" onclick="acceptCandidate('${cand.id}')">Accept</button>
+            </div>
+        `;
+        candidatesList.appendChild(item);
+    });
+}
+
+// Global scope for onclick handlers
+window.acceptCandidate = async (candidateId) => {
+    console.log(`Interaction: Accepting candidate ${candidateId}`);
+    // We need to find the candidate object to get details, or better, keep the Candidate ID and just call an endpoint?
+    // The backend `createDependency` requires { sourceApiId, targetApiId, mapping }. 
+    // But we are clicking "Accept" on a candidate. Ideally backend should have "promote candidate" endpoint.
+    // For now, I'll fetch the candidates again to find the data or (hack) store it in DOM.
+    // Let's assume we can pass the data via onclick or just find it in memory if we stored it? 
+    // Simpler: Let's fetch the list again from memory? 
+    // I'll make `candidates` a global variable or just re-fetch.
+    // Actually, let's just use the candidate ID if I can... 
+    // Wait, the backend `createDependency` takes raw data. It doesn't take candidateId. 
+    // I should probably pass the data in the function call.
+
+    // Changing strategy: renderCandidates will attach the data to the element or I will use a global map.
+    // Let's use a global map for simplicity in this file.
+
+    const candidate = window.currentCandidates.find(c => c.id === candidateId);
+    if (!candidate) return;
+
+    try {
+        const payload = {
+            sourceApiId: candidate.sourceApiId,
+            targetApiId: candidate.targetApiId,
+            mapping: candidate.mapping,
+            isRequired: true
+        };
+
+        const res = await fetch(`${API_BASE_URL}/dependencies`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Failed to create dependency");
+
+        console.log('Action: Candidate accepted, dependency created');
+        // Refresh
+        fetchDependencyData();
+    } catch (e) {
+        console.error('Accept failed:', e);
+        alert("Error accepting candidate: " + e.message);
+    }
+};
+
+window.deleteDependency = async (depId) => {
+    console.log(`Interaction: Deleting dependency ${depId}`);
+    if (!confirm("Remove this dependency?")) return;
+    try {
+        const res = await fetch(`${API_BASE_URL}/dependencies/${depId}`, {
+            method: 'DELETE'
+        });
+        if (!res.ok) throw new Error("Failed to delete");
+        console.log('Action: Dependency deleted');
+        fetchDependencyData();
+    } catch (e) {
+        console.error('Delete failed:', e);
+        alert("Error: " + e.message);
+    }
+};
+
+// Hook into renderCandidates to store data
+const originalRenderCandidates = renderCandidates;
+window.currentCandidates = [];
+renderCandidates = (candidates) => {
+    window.currentCandidates = candidates;
+    originalRenderCandidates(candidates);
 }

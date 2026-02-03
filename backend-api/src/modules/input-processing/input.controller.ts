@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import * as ParserService from './parser.service';
 
-export const prapareIngestion = async (req: Request, res: Response) => {
+export const prepareIngestion = async (req: Request, res: Response) => {
     const { projectId, sourceUrl } = req.body;
     const file = req.file;
 
