@@ -35,7 +35,12 @@ export const analyzeProjectVariables = async (projectId: string) => {
 
     const consumers = apis
         .map(api => {
-            const vars = api.variables.filter(v => v.varType === 'user_input');
+            // Include 'user_input' OR 'Authorization' (Synthetic)
+            //const vars = api.variables.filter(v => v.varType === 'user_input' || v.name === 'Authorization');
+            const vars = api.variables.filter(v =>
+                v.varType === 'user_input' ||
+                (v.name === 'Authorization' && v.location === 'header')
+            );
             return {
                 id: api.id,
                 method: api.method,

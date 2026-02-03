@@ -242,6 +242,54 @@ export const processOpenParams = async (projectId: string, source: string) => {
                     }
                 }
 
+                // ------------------------------------------------------------------
+                // AUTH DETERMINISTIC LOGIC
+                // ------------------------------------------------------------------
+                // const effectiveSecurity = operation.security || apiSpec.security || [];
+                const effectiveSecurity =
+                    operation.security ??
+                    (methods as any).security ??
+                    apiSpec.security ??
+                    [];
+                const securitySchemes = apiSpec.components?.securitySchemes || {};
+
+                let requiresAuth = false;
+                for (const secRequirement of effectiveSecurity) {
+                    const schemeNames = Object.keys(secRequirement);
+                    for (const name of schemeNames) {
+                        const definition = securitySchemes[name];
+                        if (definition) {
+                            const type = definition.type?.toLowerCase();
+                            const scheme = definition.scheme?.toLowerCase();
+                            if ((type === 'http' && scheme === 'bearer') || type === 'oauth2') {
+                                requiresAuth = true;
+                            }
+                        }
+                    }
+                }
+
+                if (requiresAuth) {
+                    // Check if already exists to avoid duplicate
+                    if (!paramVariables.find(v => v.name === 'Authorization')) {
+                        logger.debug(`Adding synthetic Authorization header for ${methodUpper} ${path}`);
+                        paramVariables.push({
+                            name: 'Authorization',
+                            location: 'header',
+                            dataType: 'string' as string,
+                            required: true,
+                            // @ts-ignore - custom property for persistence loop
+                            varType: 'synthetic'
+                        });
+                    }
+
+                    if (requiresAuth) {
+                        headerParams['Authorization'] = {
+                            type: 'string',
+                            description: 'Bearer token'
+                        };
+                    }
+                }
+
                 await tx.apiRequest.create({
                     data: {
                         apiId: apiId!,
@@ -290,36 +338,36 @@ export const processOpenParams = async (projectId: string, source: string) => {
                 const allVariables = [...paramVariables, ...bodyVariables];
 
                 for (const v of allVariables) {
-                    // "No inference" -> var_type is based on structure.
-                    // If it's in input, it's a variable candidate.
-                    // Constants are only Enums etc (User instruction: "Variables vs Constants... Path param is ALWAYS a variable").
+                    const varType = (v as any).varType || 'user_input';
+                    const dataType = v.dataType || 'string';
 
-                    // We treat EVERYTHING in input as 'user_input' type initially (or 'variable').
-                    // The AI will later suggest 'dependent_candidate' type or we verify dependencies.
-                    // DB `var_type` enum: 'constant', 'user_input', 'dependent_candidate'.
-                    // Structurally, raw inputs are 'user_input' until proven otherwise?
-                    // OR 'variable'?
-                    // Design says: "var_type VARCHAR NOT NULL -- constant, user_input, dependent_candidate"
-                    // Helper logic:
-                    // If enum -> constant?
-                    // Else -> user_input (default)
-
-                    // Wait, body params CAN be constants if single enum?
-                    // For now, default to user_input.
-
-                    await tx.variable.create({
-                        data: {
+                    // Idempotent Upsert (User Request)
+                    // Composite unique key: [apiId, name, location]
+                    await tx.variable.upsert({
+                        where: {
+                            apiId_name_location: {
+                                apiId: apiId!,
+                                name: v.name,
+                                location: v.location
+                            }
+                        },
+                        update: {
+                            varType,
+                            dataType,
+                            required: v.required
+                        },
+                        create: {
                             apiId: apiId!,
                             name: v.name,
                             location: v.location,
-                            varType: 'user_input', // Default
-                            dataType: v.dataType,
+                            varType,
+                            dataType,
                             required: v.required
                         }
                     });
                 }
-            }
-        }
+            } // Close Method Loop
+        } // Close Path Loop
         logger.info(`Import Completed. Processed ${count} APIs.`);
         return results;
     }, {
